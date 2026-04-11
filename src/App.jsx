@@ -21,6 +21,8 @@ import OwnerBookings from './pages/OwnerBookings'
 import OwnerComplaints from './pages/OwnerComplaints'
 import ProtectedRoute from './components/ProtectedRoute'
 import ChatBot from './components/ChatBot'
+import Navbar from './components/Navbar'
+import { ArrowLeftIcon } from './components/Icons'
 
 // Smart Home component that redirects logged-in users to their dashboard
 function SmartHome() {
@@ -42,59 +44,56 @@ function SmartHome() {
 
 function NotFound() {
   return (
-    <div style={{padding: 24}}>
-      <h2>Page not found</h2>
-      <p><Link to="/">Go Home</Link></p>
+    <div style={{
+      minHeight: 'calc(100vh - var(--header-height))',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      gap: 'var(--space-6)',
+      padding: 'var(--space-8)',
+      textAlign: 'center',
+      animation: 'fadeInUp 0.4s ease both',
+    }}>
+      <div style={{
+        fontSize: '6rem',
+        fontWeight: 800,
+        letterSpacing: '-0.05em',
+        lineHeight: 1,
+        background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+      }}>
+        404
+      </div>
+      <div>
+        <h2 style={{ fontSize: 'var(--text-2xl)', marginBottom: 'var(--space-2)' }}>
+          Page Not Found
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-base)', maxWidth: 400 }}>
+          The page you're looking for doesn't exist or has been moved.
+        </p>
+      </div>
+      <Link to="/" className="btn btn-primary" style={{ gap: 'var(--space-2)' }}>
+        <ArrowLeftIcon size={16} />
+        Back to Home
+      </Link>
     </div>
   )
 }
 
+// Pages that should NOT show the main navbar (login/register handle their own nav)
+const noNavbarRoutes = ['/login', '/register'];
+
 export default function App() {
+  const showNavbar = !noNavbarRoutes.some(
+    route => window.location.pathname.startsWith(route)
+  );
+
   return (
     <>
-      <Routes>
-        {/* Smart Home - redirects logged-in users to dashboard */}
-        <Route path="/" element={<SmartHome />} />
-        
-        {/* Landing page for non-logged-in users */}
-        <Route path="/landing" element={<Home />} />
-        
-        {/* Public Routes */}
-        <Route path="/search" element={<SearchResults />} />
-        <Route path="/hostel/:id" element={<HostelDetails />} />
-        <Route path="/hostel-info" element={<HostelInfo />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* Protected Student Routes */}
-        <Route element={<ProtectedRoute role="student" />}>
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
-          <Route path="/student/profile" element={<StudentProfile />} />
-        </Route>
-
-        {/* Protected Admin/Owner Routes */}
-        <Route element={<ProtectedRoute role="owner" />}>
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/double" element={<DoubleSharing />} />
-          <Route path="/admin/triple" element={<TripleSharing />} />
-          <Route path="/admin/four" element={<FourSharing />} />
-          <Route path="/admin/fees" element={<FeeManagement />} />
-          <Route path="/owner/dashboard" element={<OwnerDashboard />} />
-          <Route path="/owner/hostels" element={<OwnerHostels />} />
-          <Route path="/owner/hostels/add" element={<AddHostel />} />
-          <Route path="/owner/hostels/:id/edit" element={<AddHostel />} />
-          <Route path="/owner/rooms" element={<ManageRooms />} />
-          <Route path="/owner/rooms/add" element={<ManageRooms />} />
-          <Route path="/owner/bookings" element={<OwnerBookings />} />
-          <Route path="/owner/complaints" element={<OwnerComplaints />} />
-        </Route>
-
-        {/* Redirects */}
-        <Route path="/home" element={<Navigate to="/" replace />} />
-
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      {/* Conditionally render Navbar */}
+      <AppContent />
       
       {/* Global ChatBot - appears on all pages */}
       <ChatBot />
@@ -102,3 +101,52 @@ export default function App() {
   )
 }
 
+function AppContent() {
+  return (
+    <Routes>
+      {/* Smart Home - redirects logged-in users to dashboard */}
+      <Route path="/" element={<><Navbar /><SmartHome /></>} />
+      
+      {/* Landing page for non-logged-in users */}
+      <Route path="/landing" element={<><Navbar /><Home /></>} />
+      
+      {/* Public Routes */}
+      <Route path="/search" element={<><Navbar /><SearchResults /></>} />
+      <Route path="/hostel/:id" element={<><Navbar /><HostelDetails /></>} />
+      <Route path="/hostel-info" element={<><Navbar /><HostelInfo /></>} />
+
+      {/* Auth Routes - No navbar, they have their own layout */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      {/* Protected Student Routes */}
+      <Route element={<ProtectedRoute role="student" />}>
+        <Route path="/student/dashboard" element={<><Navbar /><StudentDashboard /></>} />
+        <Route path="/student/profile" element={<><Navbar /><StudentProfile /></>} />
+      </Route>
+
+      {/* Protected Admin/Owner Routes */}
+      <Route element={<ProtectedRoute role="owner" />}>
+        <Route path="/admin" element={<><Navbar /><AdminDashboard /></>} />
+        <Route path="/admin/double" element={<><Navbar /><DoubleSharing /></>} />
+        <Route path="/admin/triple" element={<><Navbar /><TripleSharing /></>} />
+        <Route path="/admin/four" element={<><Navbar /><FourSharing /></>} />
+        <Route path="/admin/fees" element={<><Navbar /><FeeManagement /></>} />
+        <Route path="/owner/dashboard" element={<><Navbar /><OwnerDashboard /></>} />
+        <Route path="/owner/hostels" element={<><Navbar /><OwnerHostels /></>} />
+        <Route path="/owner/hostels/add" element={<><Navbar /><AddHostel /></>} />
+        <Route path="/owner/hostels/:id/edit" element={<><Navbar /><AddHostel /></>} />
+        <Route path="/owner/rooms" element={<><Navbar /><ManageRooms /></>} />
+        <Route path="/owner/rooms/add" element={<><Navbar /><ManageRooms /></>} />
+        <Route path="/owner/bookings" element={<><Navbar /><OwnerBookings /></>} />
+        <Route path="/owner/complaints" element={<><Navbar /><OwnerComplaints /></>} />
+      </Route>
+
+      {/* Redirects */}
+      <Route path="/home" element={<Navigate to="/" replace />} />
+
+      {/* 404 */}
+      <Route path="*" element={<><Navbar /><NotFound /></>} />
+    </Routes>
+  );
+}
