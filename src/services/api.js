@@ -159,12 +159,12 @@ export const authAPI = {
   },
 
   // Send OTP for registration verification
-  sendOtp: async ({ email, phone, role }) => {
+  sendOtp: async ({ email, role }) => {
     try {
       const response = await fetch(`${API_URL}/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, phone, role }),
+        body: JSON.stringify({ email, role }),
       });
       return await response.json();
     } catch (error) {
@@ -174,12 +174,12 @@ export const authAPI = {
   },
 
   // Verify OTP
-  verifyOtp: async ({ email, phone, emailOtp, phoneOtp, role }) => {
+  verifyOtp: async ({ email, emailOtp, role }) => {
     try {
       const response = await fetch(`${API_URL}/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, phone, emailOtp, phoneOtp, role }),
+        body: JSON.stringify({ email, emailOtp, role }),
       });
       return await response.json();
     } catch (error) {

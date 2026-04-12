@@ -10,25 +10,19 @@ export default function Register() {
     name: '', email: '', phone: '', password: '', confirmPassword: '',
     username: '', hostelName: '',
   });
-  const [otpData, setOtpData] = useState({ emailOtp: '', phoneOtp: '' });
+  const [otpValue, setOtpValue] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [devOtps, setDevOtps] = useState(null);
-  const [otpFeedback, setOtpFeedback] = useState({ email: null, phone: null });
   const countdownRef = useRef(null);
-
-  // Individual OTP digit refs for the split-input UX
-  const emailOtpRefs = useRef([]);
-  const phoneOtpRefs = useRef([]);
+  const otpRefs = useRef([]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     document.body.classList.toggle('dark-mode', savedTheme === 'dark');
   }, []);
 
-  // Countdown timer for resend cooldown
   useEffect(() => {
     if (countdown > 0) {
       countdownRef.current = setTimeout(() => setCountdown(c => c - 1), 1000);
@@ -46,7 +40,6 @@ export default function Register() {
     e?.preventDefault();
     setError('');
 
-    // Basic form validation
     if (role === 'student') {
       if (!formData.name || !formData.email || !formData.phone || !formData.password) {
         setError('Please fill in all fields');
@@ -71,29 +64,15 @@ export default function Register() {
       setError('Please enter a valid email address');
       return;
     }
-    const cleanPhone = formData.phone.replace(/\D/g, '').slice(-10);
-    if (cleanPhone.length !== 10) {
-      setError('Please enter a valid 10-digit phone number');
-      return;
-    }
 
     setIsLoading(true);
-    const result = await authAPI.sendOtp({
-      email: formData.email,
-      phone: formData.phone,
-      role,
-    });
+    const result = await authAPI.sendOtp({ email: formData.email, role });
     setIsLoading(false);
 
     if (result.success) {
       setStep(2);
       setCountdown(30);
-      setOtpData({ emailOtp: '', phoneOtp: '' });
-      setOtpFeedback({ email: null, phone: null });
-      // Store dev OTPs for testing
-      if (result._dev_emailOtp) {
-        setDevOtps({ email: result._dev_emailOtp, phone: result._dev_phoneOtp });
-      }
+      setOtpValue('');
     } else {
       setError(result.message || 'Failed to send OTP');
     }
@@ -105,20 +84,13 @@ export default function Register() {
     setError('');
     setSuccess('');
     setIsLoading(true);
-    const result = await authAPI.sendOtp({
-      email: formData.email,
-      phone: formData.phone,
-      role,
-    });
+    const result = await authAPI.sendOtp({ email: formData.email, role });
     setIsLoading(false);
 
     if (result.success) {
       setCountdown(30);
       setSuccess('New OTP sent successfully!');
-      setOtpData({ emailOtp: '', phoneOtp: '' });
-      if (result._dev_emailOtp) {
-        setDevOtps({ email: result._dev_emailOtp, phone: result._dev_phoneOtp });
-      }
+      setOtpValue('');
       setTimeout(() => setSuccess(''), 3000);
     } else {
       setError(result.message);
@@ -130,33 +102,27 @@ export default function Register() {
     e?.preventDefault();
     setError('');
 
-    if (otpData.emailOtp.length !== 6 || otpData.phoneOtp.length !== 6) {
-      setError('Please enter the complete 6-digit OTP for both fields');
+    if (otpValue.length !== 6) {
+      setError('Please enter the complete 6-digit OTP');
       return;
     }
 
     setIsLoading(true);
 
-    // Step A: Verify OTPs
+    // Step A: Verify OTP
     const verifyResult = await authAPI.verifyOtp({
       email: formData.email,
-      phone: formData.phone,
-      emailOtp: otpData.emailOtp,
-      phoneOtp: otpData.phoneOtp,
+      emailOtp: otpValue,
       role,
     });
 
     if (!verifyResult.success) {
       setIsLoading(false);
       setError(verifyResult.message || 'OTP verification failed');
-      setOtpFeedback({
-        email: verifyResult.emailVerified,
-        phone: verifyResult.phoneVerified,
-      });
       return;
     }
 
-    // Step B: Create account (OTP is now verified on server)
+    // Step B: Create account
     let registerResult;
     if (role === 'student') {
       registerResult = await authAPI.studentRegister({
@@ -178,46 +144,32 @@ export default function Register() {
 
     if (registerResult.success) {
       setStep(3);
-      // Auto-redirect after success animation
-      setTimeout(() => {
-        if (role === 'student') {
-          navigate('/login');
-        } else {
-          navigate('/login');
-        }
-      }, 3000);
+      setTimeout(() => navigate('/login'), 3000);
     } else {
       setError(registerResult.message || 'Registration failed');
     }
   };
 
-  // ── OTP digit-by-digit input handler ─────────────────────────────────
-  function handleOtpDigit(type, index, value) {
+  // ── OTP digit input handler ──────────────────────────────────────────
+  function handleOtpDigit(index, value) {
     if (!/^\d?$/.test(value)) return;
-    const key = type === 'email' ? 'emailOtp' : 'phoneOtp';
-    const refs = type === 'email' ? emailOtpRefs : phoneOtpRefs;
-    const arr = otpData[key].split('');
+    const arr = otpValue.split('');
     while (arr.length < 6) arr.push('');
     arr[index] = value;
-    setOtpData({ ...otpData, [key]: arr.join('') });
-    // Auto-focus next
-    if (value && index < 5) refs.current[index + 1]?.focus();
+    setOtpValue(arr.join(''));
+    if (value && index < 5) otpRefs.current[index + 1]?.focus();
   }
 
-  function handleOtpKeyDown(type, index, e) {
-    const refs = type === 'email' ? emailOtpRefs : phoneOtpRefs;
-    const key = type === 'email' ? 'emailOtp' : 'phoneOtp';
-    if (e.key === 'Backspace' && !otpData[key][index] && index > 0) {
-      refs.current[index - 1]?.focus();
+  function handleOtpKeyDown(index, e) {
+    if (e.key === 'Backspace' && !otpValue[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
     }
   }
 
-  function handleOtpPaste(type, e) {
+  function handleOtpPaste(e) {
     e.preventDefault();
     const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (paste.length === 0) return;
-    const key = type === 'email' ? 'emailOtp' : 'phoneOtp';
-    setOtpData({ ...otpData, [key]: paste.padEnd(6, '').slice(0, 6) });
+    if (paste.length > 0) setOtpValue(paste.padEnd(6, '').slice(0, 6));
   }
 
   // ── Render: Role Selection ───────────────────────────────────────────
@@ -274,7 +226,7 @@ export default function Register() {
               Account Created!
             </h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Your email and phone have been verified. Redirecting to login...
+              Your email has been verified. Redirecting to login...
             </p>
             <div className="reg-spinner" />
           </div>
@@ -305,7 +257,7 @@ export default function Register() {
             <div className="reg-step-line" />
             <div className={`reg-step ${step >= 2 ? 'active' : ''}`}>
               <div className="reg-step-dot">2</div>
-              <span>Verify</span>
+              <span>Verify Email</span>
             </div>
           </div>
 
@@ -379,64 +331,31 @@ export default function Register() {
           {step === 2 && (
             <form onSubmit={handleVerifyAndRegister}>
               <div className="reg-otp-info">
-                <p>We've sent verification codes to:</p>
+                <p>We've sent a verification code to:</p>
                 <div className="reg-otp-targets">
                   <span>📧 {formData.email}</span>
-                  <span>📱 {formData.phone}</span>
                 </div>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.5rem' }}>
+                  Check your inbox (and spam folder) for the 6-digit code.
+                </p>
               </div>
-
-              {/* Dev mode OTP display */}
-              {devOtps && (
-                <div className="reg-dev-banner">
-                  <strong>🛠 Dev Mode</strong> — Email OTP: <code>{devOtps.email}</code> · Phone OTP: <code>{devOtps.phone}</code>
-                </div>
-              )}
 
               {/* Email OTP */}
               <div className="reg-otp-section">
-                <label className="reg-label">
-                  📧 Email OTP
-                  {otpFeedback.email === true && <span className="reg-otp-ok">✓ Verified</span>}
-                  {otpFeedback.email === false && <span className="reg-otp-bad">✗ Incorrect</span>}
-                </label>
-                <div className="reg-otp-digits" onPaste={e => handleOtpPaste('email', e)}>
+                <label className="reg-label">Enter Verification Code</label>
+                <div className="reg-otp-digits" onPaste={handleOtpPaste}>
                   {[0, 1, 2, 3, 4, 5].map(i => (
                     <input
-                      key={`e${i}`}
-                      ref={el => emailOtpRefs.current[i] = el}
+                      key={i}
+                      ref={el => otpRefs.current[i] = el}
                       type="text"
                       inputMode="numeric"
                       maxLength={1}
-                      className={`reg-otp-digit ${otpFeedback.email === false ? 'error' : ''} ${otpFeedback.email === true ? 'ok' : ''}`}
-                      value={otpData.emailOtp[i] || ''}
-                      onChange={e => handleOtpDigit('email', i, e.target.value)}
-                      onKeyDown={e => handleOtpKeyDown('email', i, e)}
+                      className="reg-otp-digit"
+                      value={otpValue[i] || ''}
+                      onChange={e => handleOtpDigit(i, e.target.value)}
+                      onKeyDown={e => handleOtpKeyDown(i, e)}
                       autoFocus={i === 0}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Phone OTP */}
-              <div className="reg-otp-section">
-                <label className="reg-label">
-                  📱 Phone OTP
-                  {otpFeedback.phone === true && <span className="reg-otp-ok">✓ Verified</span>}
-                  {otpFeedback.phone === false && <span className="reg-otp-bad">✗ Incorrect</span>}
-                </label>
-                <div className="reg-otp-digits" onPaste={e => handleOtpPaste('phone', e)}>
-                  {[0, 1, 2, 3, 4, 5].map(i => (
-                    <input
-                      key={`p${i}`}
-                      ref={el => phoneOtpRefs.current[i] = el}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      className={`reg-otp-digit ${otpFeedback.phone === false ? 'error' : ''} ${otpFeedback.phone === true ? 'ok' : ''}`}
-                      value={otpData.phoneOtp[i] || ''}
-                      onChange={e => handleOtpDigit('phone', i, e.target.value)}
-                      onKeyDown={e => handleOtpKeyDown('phone', i, e)}
                     />
                   ))}
                 </div>
@@ -527,7 +446,6 @@ const registerStyles = `
     padding: 2rem;
   }
 
-  /* ── Role Selection ── */
   .reg-role-selection { max-width: 900px; width: 100%; }
   .reg-header { text-align: center; margin-bottom: 3rem; }
   .reg-title { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
@@ -556,7 +474,6 @@ const registerStyles = `
   .reg-back-link a { color: var(--text-secondary); text-decoration: none; font-size: 0.9375rem; }
   .reg-back-link a:hover { color: var(--primary); }
 
-  /* ── Form Card ── */
   .reg-form-card {
     background: var(--bg); border: 1.5px solid var(--border);
     border-radius: 1.125rem; padding: 2.5rem;
@@ -573,7 +490,6 @@ const registerStyles = `
   .reg-form-title { font-size: 1.875rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.03em; }
   .reg-form-subtitle { color: var(--text-secondary); font-size: 0.9375rem; }
 
-  /* ── Step Indicator ── */
   .reg-steps {
     display: flex; align-items: center; justify-content: center;
     gap: 0; margin-bottom: 2rem;
@@ -605,7 +521,6 @@ const registerStyles = `
     position: relative; top: -10px;
   }
 
-  /* ── Form Elements ── */
   .reg-group { margin-bottom: 1.25rem; }
   .reg-label {
     display: flex; align-items: center; gap: 6px;
@@ -623,7 +538,6 @@ const registerStyles = `
     background: var(--bg); box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
   }
 
-  /* ── Messages ── */
   .reg-error {
     background: linear-gradient(135deg, #ef4444, #dc2626);
     color: white; padding: 0.8rem 1rem; border-radius: 0.75rem;
@@ -635,7 +549,6 @@ const registerStyles = `
     margin-bottom: 1.25rem; font-size: 0.875rem; font-weight: 500; text-align: center;
   }
 
-  /* ── Primary Button ── */
   .reg-btn {
     width: 100%; padding: 0.9rem; margin-top: 0.5rem;
     background: linear-gradient(135deg, var(--primary), var(--accent));
@@ -664,7 +577,6 @@ const registerStyles = `
   }
   .reg-back-btn:hover { border-color: var(--primary); color: var(--primary); }
 
-  /* ── OTP Section ── */
   .reg-otp-info {
     text-align: center; padding: 1rem;
     background: var(--bg-tertiary); border-radius: 0.75rem;
@@ -673,7 +585,7 @@ const registerStyles = `
   .reg-otp-info p { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
   .reg-otp-targets {
     display: flex; flex-direction: column; gap: 4px;
-    font-size: 0.8125rem; font-weight: 600;
+    font-size: 0.875rem; font-weight: 600;
   }
 
   .reg-otp-section { margin-bottom: 1.5rem; }
@@ -681,7 +593,7 @@ const registerStyles = `
     display: flex; gap: 8px; justify-content: center; margin-top: 8px;
   }
   .reg-otp-digit {
-    width: 46px; height: 52px; text-align: center;
+    width: 48px; height: 54px; text-align: center;
     font-size: 1.25rem; font-weight: 700; font-family: inherit;
     border: 2px solid var(--border); border-radius: 0.625rem;
     background: var(--bg-secondary); color: var(--text);
@@ -691,13 +603,7 @@ const registerStyles = `
     border-color: var(--primary); background: var(--bg);
     box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
   }
-  .reg-otp-digit.error { border-color: var(--danger); background: rgba(239,68,68,0.04); }
-  .reg-otp-digit.ok { border-color: var(--success); background: rgba(34,197,94,0.04); }
 
-  .reg-otp-ok { color: var(--success); font-size: 0.75rem; margin-left: auto; }
-  .reg-otp-bad { color: var(--danger); font-size: 0.75rem; margin-left: auto; }
-
-  /* ── Resend ── */
   .reg-resend {
     text-align: center; margin: 1rem 0; font-size: 0.8125rem; color: var(--text-tertiary);
   }
@@ -708,21 +614,6 @@ const registerStyles = `
   }
   .reg-resend-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* ── Dev Banner ── */
-  .reg-dev-banner {
-    background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04));
-    border: 1px solid rgba(245,158,11,0.2); border-radius: 0.625rem;
-    padding: 0.75rem 1rem; margin-bottom: 1.5rem;
-    font-size: 0.75rem; text-align: center; color: #d97706;
-  }
-  body.dark-mode .reg-dev-banner { color: #fbbf24; }
-  .reg-dev-banner code {
-    background: rgba(245,158,11,0.12); padding: 2px 6px;
-    border-radius: 4px; font-weight: 700; letter-spacing: 0.1em;
-    font-size: 0.875rem;
-  }
-
-  /* ── Footer ── */
   .reg-footer {
     margin-top: 1.5rem; text-align: center; font-size: 0.875rem;
     color: var(--text-secondary);
@@ -735,7 +626,6 @@ const registerStyles = `
   .reg-footer a { color: var(--primary); text-decoration: none; font-weight: 500; }
   .reg-footer a:hover { text-decoration: underline; }
 
-  /* ── Success Animation ── */
   .reg-success-anim { margin: 1rem auto 1.5rem; width: 72px; height: 72px; }
   .reg-checkmark { width: 72px; height: 72px; }
   .reg-checkmark circle {
@@ -763,6 +653,6 @@ const registerStyles = `
   @media (max-width: 480px) {
     .reg-form-card { padding: 2rem 1.5rem; }
     .reg-form-title { font-size: 1.625rem; }
-    .reg-otp-digit { width: 40px; height: 46px; font-size: 1.125rem; }
+    .reg-otp-digit { width: 42px; height: 48px; font-size: 1.125rem; }
   }
 `;
