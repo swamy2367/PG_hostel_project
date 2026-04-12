@@ -32,6 +32,22 @@ const BookingSchema = new mongoose.Schema({
     required: [true, 'Rent amount is required']
   },
 
+  // Flexible duration support
+  durationType: {
+    type: String,
+    enum: ['day', 'week', 'month'],
+    default: 'month'
+  },
+  durationValue: {
+    type: Number,
+    default: 1,
+    min: 1
+  },
+  totalPrice: {
+    type: Number,
+    default: 0
+  },
+
   // Status tracking
   status: {
     type: String,

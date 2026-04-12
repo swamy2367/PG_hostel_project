@@ -30,6 +30,14 @@ const OwnerSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Hostel'
   }],
+  phone: {
+    type: String,
+    trim: true,
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
   isActive: {
     type: Boolean,
     default: true

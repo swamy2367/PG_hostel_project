@@ -63,25 +63,37 @@ router.get('/owner/my', authenticateOwner, async (req, res) => {
 });
 
 // @route   GET /api/hostels/search
-// @desc    Search hostels (public) - sorted by rating, with distance calculation
+// @desc    Search hostels (public) - supports unified q param, city, name, sorted by relevance + rating
 // @access  Public
 router.get('/search', async (req, res) => {
   try {
-    const { city, name, gender, minRent, maxRent, page = 1, limit = 20, userLat, userLng } = req.query;
+    const { q, city, name, gender, minRent, maxRent, page = 1, limit = 20, userLat, userLng } = req.query;
 
-    // Build query - only require isActive (remove isVerified for now)
+    // Build query - only require isActive
     const query = {
       isActive: true
     };
 
-    // City filter (case-insensitive partial match)
-    if (city) {
-      query.city = new RegExp(city.trim(), 'i');
-    }
-
-    // Name filter (case-insensitive partial match)
-    if (name) {
-      query.name = new RegExp(name.trim(), 'i');
+    // Unified search: q searches across name, city, state, address
+    if (q && q.trim()) {
+      const terms = q.trim().split(/\s+/).filter(t => t.length > 0);
+      // Each term must match at least one field (AND logic across terms)
+      query.$and = terms.map(term => ({
+        $or: [
+          { name: new RegExp(term, 'i') },
+          { city: new RegExp(term, 'i') },
+          { state: new RegExp(term, 'i') },
+          { address: new RegExp(term, 'i') },
+        ]
+      }));
+    } else {
+      // Legacy: separate city/name params (backward compatibility)
+      if (city) {
+        query.city = new RegExp(city.trim(), 'i');
+      }
+      if (name) {
+        query.name = new RegExp(name.trim(), 'i');
+      }
     }
 
     // Gender filter
@@ -89,7 +101,7 @@ router.get('/search', async (req, res) => {
       query.gender = gender;
     }
 
-    // Execute search with pagination - sorted by rating (highest first)
+    // Execute search with pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const hostels = await Hostel.find(query)
@@ -139,23 +151,53 @@ router.get('/search', async (req, res) => {
       } else {
         hostelObj.distance = null;
       }
+
+      // Add relevance scoring for unified search
+      if (q && q.trim()) {
+        let score = 0;
+        const lowerQ = q.toLowerCase();
+        const lowerName = (hostel.name || '').toLowerCase();
+        const lowerCity = (hostel.city || '').toLowerCase();
+
+        // Exact name match = highest
+        if (lowerName === lowerQ) score += 100;
+        else if (lowerName.startsWith(lowerQ)) score += 80;
+        else if (lowerName.includes(lowerQ)) score += 60;
+
+        // Exact city match
+        if (lowerCity === lowerQ) score += 90;
+        else if (lowerCity.startsWith(lowerQ)) score += 70;
+        else if (lowerCity.includes(lowerQ)) score += 50;
+
+        // Rating boost
+        score += (hostel.rating?.average || 0) * 5;
+
+        hostelObj._relevanceScore = score;
+      }
       
       return hostelObj;
     });
 
-    // Sort by rating first, then by distance if available
+    // Sort: relevance first (if q used), then rating, then distance
     hostelsWithDistance.sort((a, b) => {
-      // Primary sort: rating (highest first)
+      // Primary: relevance score (if searching)
+      if (q && q.trim()) {
+        const scoreA = a._relevanceScore || 0;
+        const scoreB = b._relevanceScore || 0;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+      }
+
+      // Secondary: rating
       const ratingA = a.rating?.average || 0;
       const ratingB = b.rating?.average || 0;
       if (ratingB !== ratingA) return ratingB - ratingA;
       
-      // Secondary sort: review count (more reviews = higher)
+      // Tertiary: review count
       const countA = a.rating?.count || 0;
       const countB = b.rating?.count || 0;
       if (countB !== countA) return countB - countA;
       
-      // Tertiary sort: distance (closer first) if both have distance
+      // Quaternary: distance
       if (a.distance !== null && b.distance !== null) {
         return a.distance - b.distance;
       }
@@ -181,6 +223,63 @@ router.get('/search', async (req, res) => {
       message: 'Error searching hostels',
       error: error.message
     });
+  }
+});
+
+// @route   GET /api/hostels/suggest
+// @desc    Autocomplete suggestions for search (hostel names + cities)
+// @access  Public
+router.get('/suggest', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length < 2) {
+      return res.json({ success: true, suggestions: [] });
+    }
+
+    const regex = new RegExp(q.trim(), 'i');
+
+    // Find matching hostels (by name)
+    const hostelMatches = await Hostel.find(
+      { isActive: true, $or: [{ name: regex }, { city: regex }] },
+      { name: 1, city: 1, state: 1, rating: 1 }
+    ).limit(8).lean();
+
+    // Build suggestions: hostel names + unique cities
+    const suggestions = [];
+    const seenCities = new Set();
+
+    for (const h of hostelMatches) {
+      // Add hostel name suggestion
+      suggestions.push({
+        type: 'hostel',
+        text: h.name,
+        subtext: `${h.city}, ${h.state}`,
+        rating: h.rating?.average || 0,
+      });
+
+      // Add city suggestion (deduplicated)
+      const cityKey = (h.city || '').toLowerCase();
+      if (cityKey && !seenCities.has(cityKey)) {
+        seenCities.add(cityKey);
+        suggestions.push({
+          type: 'city',
+          text: h.city,
+          subtext: h.state || '',
+        });
+      }
+    }
+
+    // Sort: cities first, then hostels
+    suggestions.sort((a, b) => {
+      if (a.type === 'city' && b.type !== 'city') return -1;
+      if (a.type !== 'city' && b.type === 'city') return 1;
+      return 0;
+    });
+
+    res.json({ success: true, suggestions: suggestions.slice(0, 8) });
+  } catch (error) {
+    console.error('Suggest error:', error);
+    res.json({ success: true, suggestions: [] });
   }
 });
 

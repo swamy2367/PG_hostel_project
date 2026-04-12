@@ -97,7 +97,8 @@ export default function Navbar() {
       return [
         { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
         { to: '/search', label: 'Browse', icon: SearchIcon },
-        { to: '/student/profile', label: 'Profile', icon: UserIcon },
+        { to: '/student/bookings', label: 'Bookings', icon: ClipboardIcon },
+        { to: '/student/complaints', label: 'Complaints', icon: TicketIcon },
       ];
     }
     return [

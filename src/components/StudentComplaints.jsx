@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 
 const CATEGORIES = [
-  { value: 'maintenance', label: '🔧 Maintenance', desc: 'Plumbing, electrical, furniture' },
-  { value: 'cleanliness', label: '🧹 Cleanliness', desc: 'Room/common area cleaning' },
-  { value: 'food', label: '🍽️ Food', desc: 'Mess/food quality issues' },
-  { value: 'wifi_internet', label: '📶 WiFi/Internet', desc: 'Connectivity problems' },
-  { value: 'water_supply', label: '💧 Water Supply', desc: 'Water availability' },
-  { value: 'electricity', label: '⚡ Electricity', desc: 'Power issues' },
-  { value: 'security', label: '🔒 Security', desc: 'Safety concerns' },
-  { value: 'noise', label: '🔊 Noise', desc: 'Disturbance issues' },
-  { value: 'roommate', label: '👥 Roommate', desc: 'Roommate conflicts' },
-  { value: 'staff_behavior', label: '👤 Staff Behavior', desc: 'Staff conduct' },
-  { value: 'billing', label: '💰 Billing', desc: 'Payment disputes' },
-  { value: 'amenities', label: '🏠 Amenities', desc: 'Missing/broken amenities' },
-  { value: 'other', label: '📝 Other', desc: 'Other issues' }
+  { value: 'maintenance', label: 'Maintenance', desc: 'Plumbing, electrical, furniture' },
+  { value: 'cleanliness', label: 'Cleanliness', desc: 'Room/common area cleaning' },
+  { value: 'food', label: 'Food', desc: 'Mess/food quality issues' },
+  { value: 'wifi_internet', label: 'WiFi/Internet', desc: 'Connectivity problems' },
+  { value: 'water_supply', label: 'Water Supply', desc: 'Water availability' },
+  { value: 'electricity', label: 'Electricity', desc: 'Power issues' },
+  { value: 'security', label: 'Security', desc: 'Safety concerns' },
+  { value: 'noise', label: 'Noise', desc: 'Disturbance issues' },
+  { value: 'roommate', label: 'Roommate', desc: 'Roommate conflicts' },
+  { value: 'staff_behavior', label: 'Staff Behavior', desc: 'Staff conduct' },
+  { value: 'billing', label: 'Billing', desc: 'Payment disputes' },
+  { value: 'amenities', label: 'Amenities', desc: 'Missing/broken amenities' },
+  { value: 'other', label: 'Other', desc: 'Other issues' }
 ];
 
 const PRIORITIES = [
@@ -185,24 +185,24 @@ export default function StudentComplaints({ activeBooking }) {
         .complaints-title {
           font-size: 1.25rem;
           font-weight: 600;
-          color: var(--text-primary, #1f2937);
+          color: var(--text);
           display: flex;
           align-items: center;
           gap: 0.5rem;
         }
 
         .complaints-count {
-          background: var(--bg-tertiary, #f3f4f6);
+          background: var(--bg-tertiary);
           padding: 0.25rem 0.75rem;
           border-radius: 9999px;
           font-size: 0.875rem;
           font-weight: 500;
-          color: var(--text-secondary, #6b7280);
+          color: var(--text-secondary);
         }
 
         .new-complaint-btn {
           padding: 0.625rem 1.25rem;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          background: linear-gradient(135deg, var(--primary), var(--primary-700));
           color: white;
           border: none;
           border-radius: 0.5rem;
@@ -225,8 +225,8 @@ export default function StudentComplaints({ activeBooking }) {
         }
 
         .complaint-form-card {
-          background: var(--bg-primary, #ffffff);
-          border: 1px solid var(--border-default, #e5e7eb);
+          background: var(--bg);
+          border: 1px solid var(--border);
           border-radius: 1rem;
           padding: 1.5rem;
           margin-bottom: 1.5rem;
@@ -242,7 +242,7 @@ export default function StudentComplaints({ activeBooking }) {
           font-size: 1.125rem;
           font-weight: 600;
           margin-bottom: 1.25rem;
-          color: var(--text-primary, #1f2937);
+          color: var(--text);
         }
 
         .form-row {
@@ -260,23 +260,23 @@ export default function StudentComplaints({ activeBooking }) {
           display: block;
           font-size: 0.875rem;
           font-weight: 500;
-          color: var(--text-secondary, #6b7280);
+          color: var(--text-secondary);
           margin-bottom: 0.5rem;
         }
 
         .form-select, .form-input, .form-textarea {
           width: 100%;
           padding: 0.75rem;
-          border: 1px solid var(--border-default, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
-          background: var(--bg-secondary, #f9fafb);
-          color: var(--text-primary, #1f2937);
+          background: var(--bg-secondary);
+          color: var(--text);
           font-size: 0.9375rem;
         }
 
         .form-select:focus, .form-input:focus, .form-textarea:focus {
           outline: none;
-          border-color: #6366f1;
+          border-color: var(--primary);
           box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
@@ -293,7 +293,7 @@ export default function StudentComplaints({ activeBooking }) {
 
         .category-option {
           padding: 0.75rem;
-          border: 2px solid var(--border-default, #e5e7eb);
+          border: 2px solid var(--border);
           border-radius: 0.5rem;
           cursor: pointer;
           transition: all 0.2s;
@@ -301,11 +301,11 @@ export default function StudentComplaints({ activeBooking }) {
         }
 
         .category-option:hover {
-          border-color: #6366f1;
+          border-color: var(--primary);
         }
 
         .category-option.selected {
-          border-color: #6366f1;
+          border-color: var(--primary);
           background: rgba(99, 102, 241, 0.1);
         }
 
@@ -317,7 +317,7 @@ export default function StudentComplaints({ activeBooking }) {
         .category-option-label {
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--text-primary, #1f2937);
+          color: var(--text);
         }
 
         .form-actions {
@@ -329,8 +329,8 @@ export default function StudentComplaints({ activeBooking }) {
 
         .btn-cancel {
           padding: 0.625rem 1.25rem;
-          background: var(--bg-tertiary, #f3f4f6);
-          color: var(--text-secondary, #6b7280);
+          background: var(--bg-tertiary);
+          color: var(--text-secondary);
           border: none;
           border-radius: 0.5rem;
           font-weight: 500;
@@ -339,7 +339,7 @@ export default function StudentComplaints({ activeBooking }) {
 
         .btn-submit {
           padding: 0.625rem 1.5rem;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          background: linear-gradient(135deg, var(--primary), var(--primary-700));
           color: white;
           border: none;
           border-radius: 0.5rem;
@@ -359,8 +359,8 @@ export default function StudentComplaints({ activeBooking }) {
         }
 
         .complaint-card {
-          background: var(--bg-primary, #ffffff);
-          border: 1px solid var(--border-default, #e5e7eb);
+          background: var(--bg);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1.25rem;
           transition: all 0.2s;
@@ -379,7 +379,7 @@ export default function StudentComplaints({ activeBooking }) {
 
         .complaint-title {
           font-weight: 600;
-          color: var(--text-primary, #1f2937);
+          color: var(--text);
           margin-bottom: 0.25rem;
         }
 
@@ -387,7 +387,7 @@ export default function StudentComplaints({ activeBooking }) {
           display: flex;
           gap: 0.75rem;
           font-size: 0.8125rem;
-          color: var(--text-tertiary, #9ca3af);
+          color: var(--text-tertiary);
         }
 
         .complaint-badges {
@@ -404,7 +404,7 @@ export default function StudentComplaints({ activeBooking }) {
         }
 
         .complaint-body {
-          color: var(--text-secondary, #6b7280);
+          color: var(--text-secondary);
           font-size: 0.9375rem;
           line-height: 1.6;
           margin-bottom: 0.75rem;
@@ -427,7 +427,7 @@ export default function StudentComplaints({ activeBooking }) {
 
         .response-text {
           font-size: 0.875rem;
-          color: var(--text-secondary, #6b7280);
+          color: var(--text-secondary);
         }
 
         .complaint-resolution {
@@ -450,7 +450,7 @@ export default function StudentComplaints({ activeBooking }) {
           gap: 0.5rem;
           margin-top: 1rem;
           padding-top: 0.75rem;
-          border-top: 1px solid var(--border-default, #e5e7eb);
+          border-top: 1px solid var(--border);
         }
 
         .action-btn {
@@ -477,7 +477,7 @@ export default function StudentComplaints({ activeBooking }) {
         .empty-complaints {
           text-align: center;
           padding: 3rem 2rem;
-          color: var(--text-secondary, #6b7280);
+          color: var(--text-secondary);
         }
 
         .empty-icon {
@@ -496,7 +496,7 @@ export default function StudentComplaints({ activeBooking }) {
         }
 
         .feedback-content {
-          background: var(--bg-primary, #ffffff);
+          background: var(--bg);
           border-radius: 1rem;
           padding: 1.5rem;
           max-width: 400px;
@@ -514,7 +514,7 @@ export default function StudentComplaints({ activeBooking }) {
           border: none;
           font-size: 2rem;
           cursor: pointer;
-          color: var(--border-default, #e5e7eb);
+          color: var(--border);
           transition: all 0.15s;
         }
 
@@ -541,7 +541,7 @@ export default function StudentComplaints({ activeBooking }) {
       <div className="complaints-section">
         <div className="complaints-header">
           <div className="complaints-title">
-            🎫 My Complaints
+            My Complaints
             <span className="complaints-count">{complaints.length}</span>
           </div>
           <button 
@@ -567,8 +567,8 @@ export default function StudentComplaints({ activeBooking }) {
                       className={`category-option ${formData.category === cat.value ? 'selected' : ''}`}
                       onClick={() => setFormData({ ...formData, category: cat.value })}
                     >
-                      <div className="category-option-icon">{cat.label.split(' ')[0]}</div>
-                      <div className="category-option-label">{cat.label.split(' ').slice(1).join(' ')}</div>
+                      <div className="category-option-icon">{cat.desc.charAt(0)}</div>
+                      <div className="category-option-label">{cat.label}</div>
                     </div>
                   ))}
                 </div>
@@ -633,7 +633,7 @@ export default function StudentComplaints({ activeBooking }) {
           <div className="empty-complaints">Loading complaints...</div>
         ) : complaints.length === 0 ? (
           <div className="empty-complaints">
-            <div className="empty-icon">✅</div>
+            <div style={{ width: 48, height: 48, borderRadius: 'var(--radius-lg)', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--text-tertiary)' }}>✓</div>
             <div>No complaints yet</div>
             <div style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
               {activeBooking ? 'Having an issue? Click "Raise Issue" above' : 'Book a hostel first to raise issues'}
@@ -719,7 +719,7 @@ export default function StudentComplaints({ activeBooking }) {
                       fontSize: '0.875rem', 
                       color: 'var(--text-secondary)' 
                     }}>
-                      Your rating: {'⭐'.repeat(complaint.studentRating)}
+                      Your rating: {'★'.repeat(complaint.studentRating)}
                       {complaint.studentFeedback && ` - "${complaint.studentFeedback}"`}
                     </div>
                   )}

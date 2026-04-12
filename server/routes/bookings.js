@@ -7,21 +7,98 @@ import { authenticateStudent, authenticateOwner } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Price calculation helper
+function calculatePrice(monthlyRent, durationType, durationValue) {
+  if (!monthlyRent || monthlyRent <= 0 || !durationValue || durationValue <= 0) {
+    return { perUnit: 0, total: 0 };
+  }
+  let perUnit;
+  switch (durationType) {
+    case 'day':
+      perUnit = Math.round(monthlyRent / 30);
+      break;
+    case 'week':
+      perUnit = Math.round((monthlyRent / 30) * 7);
+      break;
+    case 'month':
+    default:
+      perUnit = monthlyRent;
+      break;
+  }
+  return { perUnit, total: perUnit * durationValue };
+}
+
+// @route   POST /api/bookings/calculate
+// @desc    Calculate price for a flexible booking duration
+// @access  Public
+router.post('/calculate', async (req, res) => {
+  try {
+    const { hostelId, roomType, durationType, durationValue } = req.body;
+
+    if (!hostelId || !roomType) {
+      return res.status(400).json({ success: false, message: 'hostelId and roomType are required' });
+    }
+    if (!['day', 'week', 'month'].includes(durationType)) {
+      return res.status(400).json({ success: false, message: 'durationType must be day, week, or month' });
+    }
+    if (!durationValue || durationValue <= 0 || !Number.isFinite(durationValue)) {
+      return res.status(400).json({ success: false, message: 'durationValue must be a positive number' });
+    }
+
+    const hostel = await Hostel.findById(hostelId);
+    if (!hostel) {
+      return res.status(404).json({ success: false, message: 'Hostel not found' });
+    }
+
+    // Get rent from hostel config
+    const monthlyRent = hostel.roomConfig?.[roomType]?.rent || 0;
+    if (monthlyRent <= 0) {
+      return res.status(400).json({ success: false, message: 'Room type not configured or has no price' });
+    }
+
+    const { perUnit, total } = calculatePrice(monthlyRent, durationType, durationValue);
+    const unitLabel = durationType === 'day' ? 'day' : durationType === 'week' ? 'week' : 'month';
+
+    res.json({
+      success: true,
+      breakdown: {
+        monthlyRent,
+        perUnit,
+        durationType,
+        durationValue,
+        total,
+        label: `Rs.${perUnit.toLocaleString()} x ${durationValue} ${unitLabel}${durationValue !== 1 ? 's' : ''}`
+      }
+    });
+  } catch (error) {
+    console.error('Calculate price error:', error);
+    res.status(500).json({ success: false, message: 'Error calculating price' });
+  }
+});
+
 // @route   POST /api/bookings/request
-// @desc    Create a booking request
+// @desc    Create a booking request (supports flexible duration)
 // @access  Private (Student only)
 router.post('/request', authenticateStudent, async (req, res) => {
   try {
-    const { hostelId, roomType, studentNotes } = req.body;
+    const { hostelId, roomType, studentNotes, durationType = 'month', durationValue = 1 } = req.body;
     const studentId = req.user.id;
 
-    // Get student info (email verification disabled for now)
+    // Get student info
     const student = await Student.findById(studentId);
     if (!student) {
       return res.status(404).json({
         success: false,
         message: 'Student not found'
       });
+    }
+
+    // Validate duration
+    if (!['day', 'week', 'month'].includes(durationType)) {
+      return res.status(400).json({ success: false, message: 'Invalid duration type' });
+    }
+    if (!durationValue || durationValue <= 0 || durationValue > 365) {
+      return res.status(400).json({ success: false, message: 'Duration value must be between 1 and 365' });
     }
 
     // Check if student already has an active booking
@@ -54,22 +131,11 @@ router.post('/request', authenticateStudent, async (req, res) => {
       });
     }
 
-    // Get capacity for room type
-    const capacityMap = { single: 1, double: 2, triple: 3, four: 4 };
-    const capacity = capacityMap[roomType];
-
-    // Find a room of the requested type with available beds
-    // A room has available beds if occupants.length < capacity
+    // Find available room
     const rooms = await Room.find({ hostelId, type: roomType }).sort({ number: 1 });
-    
-    // Also check for pending bookings - don't assign same room to multiple pending requests
     let availableRoom = null;
     for (const room of rooms) {
-      const occupantCount = room.occupants?.length || 0;
-      const pendingBookingsCount = room.currentBookings?.length || 0;
-      // Total people assigned or pending = occupants + pending bookings
-      const totalAssigned = occupantCount + pendingBookingsCount;
-      
+      const totalAssigned = (room.occupants?.length || 0) + (room.currentBookings?.length || 0);
       if (totalAssigned < room.capacity) {
         availableRoom = room;
         break;
@@ -83,10 +149,11 @@ router.post('/request', authenticateStudent, async (req, res) => {
       });
     }
 
-    // Get rent from room or hostel config
+    // Get rent and calculate total price
     const rent = availableRoom.rent || hostel.roomConfig[roomType]?.rent || 0;
+    const { total: totalPrice } = calculatePrice(rent, durationType, durationValue);
 
-    // Create booking
+    // Create booking with duration info
     const booking = await Booking.create({
       student: studentId,
       hostel: hostelId,
@@ -94,11 +161,14 @@ router.post('/request', authenticateStudent, async (req, res) => {
       roomType,
       roomNumber: availableRoom.number,
       rent,
+      durationType,
+      durationValue,
+      totalPrice,
       status: 'pending',
       studentNotes: studentNotes || ''
     });
 
-    // Add booking to room's current bookings (don't change status yet - owner will approve)
+    // Add booking to room's current bookings
     availableRoom.currentBookings.push(booking._id);
     await availableRoom.save();
 

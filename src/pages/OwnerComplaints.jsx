@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import OwnerNavbar from '../components/OwnerNavbar';
+import DashboardLayout from '../components/DashboardLayout';
+import { TicketIcon, CheckCircleIcon } from '../components/Icons';
 
 const CATEGORIES = [
-  { value: 'maintenance', label: '🔧 Maintenance' },
-  { value: 'cleanliness', label: '🧹 Cleanliness' },
-  { value: 'food', label: '🍽️ Food' },
-  { value: 'wifi_internet', label: '📶 WiFi/Internet' },
-  { value: 'water_supply', label: '💧 Water Supply' },
-  { value: 'electricity', label: '⚡ Electricity' },
-  { value: 'security', label: '🔒 Security' },
-  { value: 'noise', label: '🔊 Noise' },
-  { value: 'roommate', label: '👥 Roommate' },
-  { value: 'staff_behavior', label: '👤 Staff Behavior' },
-  { value: 'billing', label: '💰 Billing' },
-  { value: 'amenities', label: '🏠 Amenities' },
-  { value: 'other', label: '📝 Other' }
+  { value: 'maintenance', label: 'Maintenance' },
+  { value: 'cleanliness', label: 'Cleanliness' },
+  { value: 'food', label: 'Food' },
+  { value: 'wifi_internet', label: 'WiFi/Internet' },
+  { value: 'water_supply', label: 'Water Supply' },
+  { value: 'electricity', label: 'Electricity' },
+  { value: 'security', label: 'Security' },
+  { value: 'noise', label: 'Noise' },
+  { value: 'roommate', label: 'Roommate' },
+  { value: 'staff_behavior', label: 'Staff Behavior' },
+  { value: 'billing', label: 'Billing' },
+  { value: 'amenities', label: 'Amenities' },
+  { value: 'other', label: 'Other' }
 ];
 
 const PRIORITIES = [
@@ -25,7 +26,6 @@ const PRIORITIES = [
 ];
 
 export default function OwnerComplaints() {
-  const [isDark, setIsDark] = useState(false);
   const [complaints, setComplaints] = useState([]);
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,35 +37,9 @@ export default function OwnerComplaints() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    setIsDark(savedTheme === 'dark');
-    
-    if (savedTheme === 'dark') {
-      document.body.classList.add('dark-theme');
-    } else {
-      document.body.classList.remove('dark-theme');
-    }
-
-    const handleThemeChange = () => {
-      const newTheme = localStorage.getItem('theme');
-      setIsDark(newTheme === 'dark');
-      if (newTheme === 'dark') {
-        document.body.classList.add('dark-theme');
-      } else {
-        document.body.classList.remove('dark-theme');
-      }
-    };
-
-    window.addEventListener('themeChange', handleThemeChange);
-    
-    return () => {
-      window.removeEventListener('themeChange', handleThemeChange);
-    };
-  }, []);
-
-  useEffect(() => {
     fetchData();
   }, []);
+
 
   const fetchData = async () => {
     try {
@@ -194,11 +168,9 @@ export default function OwnerComplaints() {
   });
 
   return (
-    <div className={`owner-complaints-wrapper ${isDark ? 'dark-theme' : 'light-theme'}`}>
-      <OwnerNavbar />
+    <DashboardLayout role="owner">
 
       <style>{`
-        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         .owner-complaints-wrapper {
           min-height: 100vh;
@@ -654,7 +626,7 @@ export default function OwnerComplaints() {
 
       <div className="complaints-container">
         <div className="page-header">
-          <h1 className="page-title">🎫 Student Complaints</h1>
+          <h1 className="page-title">Student Complaints</h1>
           <p className="page-subtitle">Manage and resolve student issues across your hostels</p>
         </div>
 
@@ -723,7 +695,7 @@ export default function OwnerComplaints() {
             <div className="complaints-list">
               {filteredComplaints.length === 0 ? (
                 <div className="empty-state">
-                  <div className="empty-icon">✅</div>
+                  <div className="empty-state-icon"><CheckCircleIcon size={28} /></div>
                   <div>No complaints found</div>
                 </div>
               ) : (
@@ -856,7 +828,7 @@ export default function OwnerComplaints() {
                     <div className="detail-section">
                       <div className="detail-label">Student Feedback</div>
                       <div className="feedback-box">
-                        <div className="feedback-rating">{'⭐'.repeat(selectedComplaint.studentRating)}</div>
+                        <div className="feedback-rating">{'★'.repeat(selectedComplaint.studentRating)}</div>
                         {selectedComplaint.studentFeedback && (
                           <div>{selectedComplaint.studentFeedback}</div>
                         )}
@@ -903,7 +875,7 @@ export default function OwnerComplaints() {
                               onClick={handleResolve}
                               disabled={submitting || !resolutionText.trim()}
                             >
-                              {submitting ? 'Resolving...' : '✓ Mark Resolved'}
+                              {submitting ? 'Resolving...' : 'Mark Resolved'}
                             </button>
                           </div>
                         </>
@@ -913,7 +885,7 @@ export default function OwnerComplaints() {
                 </>
               ) : (
                 <div className="no-selection">
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
+                  <div className="empty-state-icon" style={{ width: 64, height: 64, marginBottom: '1rem' }}><TicketIcon size={28} /></div>
                   <div>Select a complaint to view details</div>
                 </div>
               )}
@@ -921,6 +893,6 @@ export default function OwnerComplaints() {
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

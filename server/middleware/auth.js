@@ -68,7 +68,23 @@ const authenticate = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('Authentication error:', error);
+    // Handle known JWT errors silently (stale tokens from browser)
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token. Please log in again.',
+        tokenInvalid: true,
+      });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Session expired. Please log in again.',
+        tokenExpired: true,
+      });
+    }
+    // Only log truly unexpected errors
+    console.error('Authentication error:', error.message);
     res.status(401).json({
       success: false,
       message: 'Token is not valid'

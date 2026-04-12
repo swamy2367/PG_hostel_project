@@ -8,6 +8,8 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentProfile from './pages/StudentProfile'
+import StudentBookings from './pages/StudentBookings'
+import StudentComplaintsPage from './pages/StudentComplaintsPage'
 import AdminDashboard from './pages/AdminDashboard'
 import DoubleSharing from './pages/DoubleSharing'
 import TripleSharing from './pages/TripleSharing'
@@ -121,8 +123,10 @@ function AppContent() {
 
       {/* Protected Student Routes */}
       <Route element={<ProtectedRoute role="student" />}>
-        <Route path="/student/dashboard" element={<><Navbar /><StudentDashboard /></>} />
-        <Route path="/student/profile" element={<><Navbar /><StudentProfile /></>} />
+        <Route path="/student/dashboard" element={<StudentDashboard />} />
+        <Route path="/student/profile" element={<StudentProfile />} />
+        <Route path="/student/bookings" element={<StudentBookings />} />
+        <Route path="/student/complaints" element={<StudentComplaintsPage />} />
       </Route>
 
       {/* Protected Admin/Owner Routes */}
@@ -132,14 +136,14 @@ function AppContent() {
         <Route path="/admin/triple" element={<><Navbar /><TripleSharing /></>} />
         <Route path="/admin/four" element={<><Navbar /><FourSharing /></>} />
         <Route path="/admin/fees" element={<><Navbar /><FeeManagement /></>} />
-        <Route path="/owner/dashboard" element={<><Navbar /><OwnerDashboard /></>} />
-        <Route path="/owner/hostels" element={<><Navbar /><OwnerHostels /></>} />
-        <Route path="/owner/hostels/add" element={<><Navbar /><AddHostel /></>} />
-        <Route path="/owner/hostels/:id/edit" element={<><Navbar /><AddHostel /></>} />
-        <Route path="/owner/rooms" element={<><Navbar /><ManageRooms /></>} />
-        <Route path="/owner/rooms/add" element={<><Navbar /><ManageRooms /></>} />
-        <Route path="/owner/bookings" element={<><Navbar /><OwnerBookings /></>} />
-        <Route path="/owner/complaints" element={<><Navbar /><OwnerComplaints /></>} />
+        <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+        <Route path="/owner/hostels" element={<OwnerHostels />} />
+        <Route path="/owner/hostels/add" element={<AddHostel />} />
+        <Route path="/owner/hostels/:id/edit" element={<AddHostel />} />
+        <Route path="/owner/rooms" element={<ManageRooms />} />
+        <Route path="/owner/rooms/add" element={<ManageRooms />} />
+        <Route path="/owner/bookings" element={<OwnerBookings />} />
+        <Route path="/owner/complaints" element={<OwnerComplaints />} />
       </Route>
 
       {/* Redirects */}

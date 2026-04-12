@@ -56,6 +56,10 @@ const StudentSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isPhoneVerified: {
+    type: Boolean,
+    default: false
+  },
   profileComplete: {
     type: Boolean,
     default: false

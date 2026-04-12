@@ -451,7 +451,7 @@ export default function OwnerNavbar() {
 
       <nav className="owner-navbar">
         <Link to="/owner/dashboard" className="navbar-brand">
-          🏢 HostelHub
+          HostelHub
         </Link>
 
         <button

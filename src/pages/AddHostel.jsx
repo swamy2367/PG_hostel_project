@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import OwnerNavbar from '../components/OwnerNavbar'
+import DashboardLayout from '../components/DashboardLayout'
 
 export default function AddHostel() {
   const navigate = useNavigate()
@@ -275,23 +275,23 @@ export default function AddHostel() {
     if (step === 1) {
       // Validate step 1 with specific error messages
       if (!formData.name?.trim()) {
-        setError('❌ Hostel Name is required')
+        setError('Hostel Name is required')
         return
       }
       if (!formData.city?.trim()) {
-        setError('❌ City is required')
+        setError('City is required')
         return
       }
       if (!formData.state?.trim()) {
-        setError('❌ State is required')
+        setError('State is required')
         return
       }
       if (!formData.address?.trim()) {
-        setError('❌ Address is required')
+        setError('Address is required')
         return
       }
       if (!formData.contactPhone?.trim()) {
-        setError('❌ Contact Phone is required')
+        setError('Contact Phone is required')
         return
       }
       setStep(2)
@@ -305,25 +305,25 @@ export default function AddHostel() {
                            (parseInt(rooms.four.count) || 0)
 
     if (totalConfigured === 0) {
-      setError('❌ Please add at least one room type')
+      setError('Please add at least one room type')
       return
     }
 
     // Validate that prices are set for configured rooms
     if ((parseInt(rooms.single.count) || 0) > 0 && !rooms.single.price) {
-      setError('❌ Please set price for Single rooms')
+      setError('Please set price for Single rooms')
       return
     }
     if ((parseInt(rooms.double.count) || 0) > 0 && !rooms.double.price) {
-      setError('❌ Please set price for Double rooms')
+      setError('Please set price for Double rooms')
       return
     }
     if ((parseInt(rooms.triple.count) || 0) > 0 && !rooms.triple.price) {
-      setError('❌ Please set price for Triple rooms')
+      setError('Please set price for Triple rooms')
       return
     }
     if ((parseInt(rooms.four.count) || 0) > 0 && !rooms.four.price) {
-      setError('❌ Please set price for Four-person rooms')
+      setError('Please set price for Four-person rooms')
       return
     }
 
@@ -404,13 +404,13 @@ export default function AddHostel() {
       console.log('Response:', data)
 
       if (response.ok && (data.success || data.hostel)) {
-        alert(isEditMode ? '✅ Hostel updated successfully!' : '✅ Hostel created successfully!')
+        alert(isEditMode ? 'Hostel updated successfully!' : 'Hostel created successfully!')
         navigate('/owner/hostels')
       } else {
-        setError(`❌ Error: ${data.message || 'Failed to save hostel'}`)
+        setError(data.message || 'Failed to save hostel')
       }
     } catch (err) {
-      setError(`❌ Error: ${err.message || 'Failed to create hostel'}`)
+      setError(err.message || 'Failed to create hostel')
       console.error('Error:', err)
     } finally {
       setLoading(false)
@@ -418,9 +418,8 @@ export default function AddHostel() {
   }
 
   return (
-    <div className={`add-hostel-wrapper ${isDark ? 'dark-theme' : 'light-theme'}`}>
-      <OwnerNavbar />
-
+    <DashboardLayout role="owner">
+      <div className={`add-hostel-wrapper ${isDark ? 'dark-theme' : 'light-theme'}`}>
       <style>{`
         .add-hostel-wrapper {
           min-height: 100vh;
@@ -820,7 +819,7 @@ export default function AddHostel() {
 
       <div className="add-hostel-container">
         <div className="page-header">
-          <h1 className="page-title">🏢 {isEditMode ? 'Edit Hostel' : 'Add New Hostel'}</h1>
+          <h1 className="page-title">{isEditMode ? 'Edit Hostel' : 'Add New Hostel'}</h1>
           <p className="page-subtitle">Step {step} of 2 - {step === 1 ? 'Basic Information' : 'Room Configuration'}</p>
         </div>
 
@@ -917,8 +916,8 @@ export default function AddHostel() {
                   }}>
                     <span>
                       {coordinates.lat !== 0 
-                        ? `📍 Location set: ${coordinates.lat.toFixed(4)}, ${coordinates.lng.toFixed(4)}`
-                        : '📍 Location will be auto-detected from address'}
+                        ? `Location set: ${coordinates.lat.toFixed(4)}, ${coordinates.lng.toFixed(4)}`
+                        : 'Location will be auto-detected from address'}
                     </span>
                     <button
                       type="button"
@@ -934,7 +933,7 @@ export default function AddHostel() {
                         fontWeight: 500
                       }}
                     >
-                      {locationStatus === 'getting' ? '⏳ Getting...' : '📌 Use My Location'}
+                      {locationStatus === 'getting' ? 'Getting...' : 'Use My Location'}
                     </button>
                   </div>
 
@@ -1335,15 +1334,16 @@ export default function AddHostel() {
                 </button>
               )}
               <button type="button" onClick={() => navigate('/owner/dashboard')} className="btn btn-secondary">
-                ✕ Cancel
+                Cancel
               </button>
               <button type="submit" disabled={loading} className="btn btn-primary">
-                {step === 1 ? '➜ Next' : loading ? '⏳ Saving...' : isEditMode ? '✅ Update Hostel' : '✅ Create Hostel'}
+                {step === 1 ? 'Next' : loading ? 'Saving...' : isEditMode ? 'Update Hostel' : 'Create Hostel'}
               </button>
             </div>
           </form>
         </div>
       </div>
     </div>
+    </DashboardLayout>
   )
 }

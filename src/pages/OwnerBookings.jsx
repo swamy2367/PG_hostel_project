@@ -1,41 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import OwnerNavbar from '../components/OwnerNavbar'
+import DashboardLayout from '../components/DashboardLayout'
+import {
+  ClipboardIcon, CheckCircleIcon, XCircleIcon, HourglassIcon,
+  LogOutIcon, HomeIcon, UserIcon, MailIcon, PhoneIcon, CalendarIcon, BedIcon
+} from '../components/Icons'
 
 export default function OwnerBookings() {
-  const [isDark, setIsDark] = useState(false)
   const [bookings, setBookings] = useState([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    // Initialize theme
-    const savedTheme = localStorage.getItem('theme')
-    setIsDark(savedTheme === 'dark')
-    
-    if (savedTheme === 'dark') {
-      document.body.classList.add('dark-theme')
-    } else {
-      document.body.classList.remove('dark-theme')
-    }
-
-    // Listen for theme changes
-    const handleThemeChange = () => {
-      const newTheme = localStorage.getItem('theme')
-      setIsDark(newTheme === 'dark')
-      if (newTheme === 'dark') {
-        document.body.classList.add('dark-theme')
-      } else {
-        document.body.classList.remove('dark-theme')
-      }
-    }
-
-    window.addEventListener('themeChange', handleThemeChange)
-    
-    return () => {
-      window.removeEventListener('themeChange', handleThemeChange)
-    }
-  }, [])
 
   useEffect(() => {
     fetchBookings()
@@ -125,579 +99,228 @@ export default function OwnerBookings() {
 
   const filteredBookings = filter === 'all'
     ? bookings
+    : filter === 'approved'
+    ? bookings.filter(b => b.status === 'approved' || b.status === 'active')
     : bookings.filter(b => b.status === filter)
 
-  const statusColors = {
-    pending: { bg: '#fef3c7', text: '#92400e', icon: '⏳' },
-    approved: { bg: '#dcfce7', text: '#166534', icon: '✅' },
-    active: { bg: '#dbeafe', text: '#1e40af', icon: '🏠' },
-    rejected: { bg: '#fee2e2', text: '#991b1b', icon: '❌' },
-    cancelled: { bg: '#f3f4f6', text: '#6b7280', icon: '🚫' },
-    completed: { bg: '#d1fae5', text: '#065f46', icon: '🎉' }
+  const filters = [
+    { key: 'all', label: 'All', count: bookings.length },
+    { key: 'pending', label: 'Pending', count: bookings.filter(b => b.status === 'pending').length },
+    { key: 'approved', label: 'Approved', count: bookings.filter(b => b.status === 'approved' || b.status === 'active').length },
+    { key: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length },
+  ]
+
+  const statusConfig = {
+    pending: { badge: 'badge-warning', label: 'Pending', icon: HourglassIcon },
+    approved: { badge: 'badge-success', label: 'Approved', icon: CheckCircleIcon },
+    active: { badge: 'badge-info', label: 'Active', icon: HomeIcon },
+    rejected: { badge: 'badge-danger', label: 'Rejected', icon: XCircleIcon },
+    cancelled: { badge: 'badge-neutral', label: 'Cancelled', icon: XCircleIcon },
+    completed: { badge: 'badge-success', label: 'Completed', icon: CheckCircleIcon },
   }
 
   return (
-    <div className={`owner-bookings-wrapper ${isDark ? 'dark-theme' : 'light-theme'}`}>
-      <OwnerNavbar />
-
-      <style>{`
-        .owner-bookings-wrapper {
-          min-height: 100vh;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
-          transition: all 0.2s ease;
-        }
-
-        .light-theme {
-          background: #ffffff;
-          color: #111827;
-        }
-
-        .dark-theme {
-          background: #0f172a;
-          color: #f1f5f9;
-        }
-
-        .bookings-container {
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 2.5rem 2rem;
-        }
-
-        .page-header {
-          margin-bottom: 2rem;
-        }
-
-        .page-title {
-          font-size: 1.875rem;
-          font-weight: 600;
-          color: #111827;
-          margin-bottom: 0.375rem;
-          letter-spacing: -0.025em;
-        }
-
-        .dark-theme .page-title {
-          color: #f1f5f9;
-        }
-
-        .page-subtitle {
-          font-size: 0.9375rem;
-          color: #6b7280;
-        }
-
-        .dark-theme .page-subtitle {
-          color: #94a3b8;
-        }
-
-        .filters {
-          display: flex;
-          gap: 0.5rem;
-          margin-bottom: 1.5rem;
-          flex-wrap: wrap;
-        }
-
-        .filter-btn {
-          padding: 0.5rem 1rem;
-          border: 1px solid #e2e8f0;
-          background: #ffffff;
-          border-radius: 0.5rem;
-          cursor: pointer;
-          font-weight: 500;
-          font-size: 0.875rem;
-          transition: all 0.2s ease;
-          color: #6b7280;
-        }
-
-        .dark-theme .filter-btn {
-          background: #1e293b;
-          border-color: #334155;
-          color: #94a3b8;
-        }
-
-        .filter-btn.active {
-          background: #111827;
-          border-color: #111827;
-          color: white;
-        }
-
-        .dark-theme .filter-btn.active {
-          background: #3b82f6;
-          border-color: #3b82f6;
-        }
-
-        .filter-btn:hover:not(.active) {
-          border-color: #cbd5e1;
-          background: #f8fafc;
-        }
-
-        .dark-theme .filter-btn:hover:not(.active) {
-          border-color: #475569;
-          background: #334155;
-        }
-
-        .error-message {
-          background: #fef2f2;
-          color: #991b1b;
-          padding: 0.875rem 1rem;
-          border-radius: 0.5rem;
-          margin-bottom: 1.5rem;
-          border-left: 3px solid #dc2626;
-          font-size: 0.875rem;
-        }
-
-        .dark-theme .error-message {
-          background: rgba(153, 27, 27, 0.15);
-          color: #fca5a5;
-        }
-
-        .bookings-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .booking-card {
-          background: #ffffff;
-          border-radius: 1rem;
-          overflow: hidden;
-          border: 1px solid #e2e8f0;
-          transition: all 0.2s ease;
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          gap: 1.25rem;
-          padding: 1.25rem;
-        }
-
-        .dark-theme .booking-card {
-          background: #1e293b;
-          border-color: #334155;
-        }
-
-        .booking-card:hover {
-          border-color: #cbd5e1;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .dark-theme .booking-card:hover {
-          border-color: #475569;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .booking-status {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 0.375rem;
-        }
-
-        .status-badge {
-          font-size: 1.5rem;
-          width: 48px;
-          height: 48px;
-          border-radius: 0.75rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .status-text {
-          font-weight: 500;
-          font-size: 0.75rem;
-          text-transform: capitalize;
-        }
-
-        .booking-info {
-          display: grid;
-          gap: 0.75rem;
-        }
-
-        .booking-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 0.375rem;
-          padding-bottom: 0.75rem;
-          border-bottom: 1px solid #f1f5f9;
-        }
-
-        .dark-theme .booking-header {
-          border-bottom-color: #334155;
-        }
-
-        .booking-title {
-          font-size: 1rem;
-          font-weight: 600;
-          color: #111827;
-        }
-
-        .dark-theme .booking-title {
-          color: #f1f5f9;
-        }
-
-        .booking-dates {
-          font-size: 0.8125rem;
-          color: #6b7280;
-        }
-
-        .dark-theme .booking-dates {
-          color: #94a3b8;
-        }
-
-        .booking-details {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-          gap: 0.75rem;
-        }
-
-        .detail-item {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-        }
-
-        .detail-label {
-          font-size: 0.6875rem;
-          color: #6b7280;
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .dark-theme .detail-label {
-          color: #94a3b8;
-        }
-
-        .detail-value {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: #111827;
-        }
-
-        .dark-theme .detail-value {
-          color: #f1f5f9;
-        }
-
-        .booking-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          justify-content: flex-start;
-        }
-
-        .action-btn {
-          padding: 0.5rem 1rem;
-          border: none;
-          border-radius: 0.5rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-size: 0.8125rem;
-          white-space: nowrap;
-        }
-
-        .btn-approve {
-          background: #ecfdf5;
-          color: #059669;
-          border: 1px solid #a7f3d0;
-        }
-
-        .btn-approve:hover {
-          background: #d1fae5;
-        }
-
-        .dark-theme .btn-approve {
-          background: rgba(16, 185, 129, 0.15);
-          color: #34d399;
-          border: 1px solid rgba(16, 185, 129, 0.25);
-        }
-
-        .dark-theme .btn-approve:hover {
-          background: rgba(16, 185, 129, 0.25);
-        }
-
-        .btn-reject {
-          background: #fef2f2;
-          color: #dc2626;
-          border: 1px solid #fecaca;
-        }
-
-        .btn-reject:hover {
-          background: #fee2e2;
-        }
-
-        .dark-theme .btn-reject {
-          background: rgba(239, 68, 68, 0.15);
-          color: #f87171;
-          border: 1px solid rgba(239, 68, 68, 0.25);
-        }
-
-        .dark-theme .btn-reject:hover {
-          background: rgba(239, 68, 68, 0.25);
-        }
-
-        .btn-view {
-          background: #eff6ff;
-          color: #3b82f6;
-          border: 1px solid #dbeafe;
-        }
-
-        .btn-view:hover {
-          background: #dbeafe;
-        }
-
-        .dark-theme .btn-view {
-          background: rgba(59, 130, 246, 0.15);
-          color: #60a5fa;
-          border: 1px solid rgba(59, 130, 246, 0.25);
-        }
-
-        .dark-theme .btn-view:hover {
-          background: rgba(59, 130, 246, 0.25);
-        }
-
-        .btn-checkout {
-          background: #fef3c7;
-          color: #92400e;
-          border: 1px solid #fcd34d;
-        }
-
-        .btn-checkout:hover {
-          background: #fde68a;
-        }
-
-        .dark-theme .btn-checkout {
-          background: rgba(251, 191, 36, 0.15);
-          color: #fbbf24;
-          border: 1px solid rgba(251, 191, 36, 0.25);
-        }
-
-        .dark-theme .btn-checkout:hover {
-          background: rgba(251, 191, 36, 0.25);
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: 3rem 2rem;
-          background: #f8fafc;
-          border-radius: 1rem;
-          border: 1px dashed #e2e8f0;
-        }
-
-        .dark-theme .empty-state {
-          background: #1e293b;
-          border-color: #334155;
-        }
-
-        .empty-icon {
-          font-size: 2.5rem;
-          margin-bottom: 1rem;
-          opacity: 0.5;
-        }
-
-        .empty-title {
-          font-size: 1rem;
-          font-weight: 600;
-          color: #111827;
-          margin-bottom: 0.375rem;
-        }
-
-        .dark-theme .empty-title {
-          color: #f1f5f9;
-        }
-
-        .empty-subtitle {
-          color: #6b7280;
-          font-size: 0.875rem;
-        }
-
-        .dark-theme .empty-subtitle {
-          color: #94a3b8;
-        }
-
-        .loading {
-          text-align: center;
-          padding: 2rem;
-          font-size: 0.9375rem;
-          color: #6b7280;
-        }
-
-        .dark-theme .loading {
-          color: #94a3b8;
-        }
-
-        @media (max-width: 768px) {
-          .bookings-container {
-            padding: 1.5rem 1rem;
-          }
-
-          .page-title {
-            font-size: 1.5rem;
-          }
-
-          .booking-card {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-          }
-
-          .booking-actions {
-            flex-direction: row;
-          }
-
-          .action-btn {
-            flex: 1;
-          }
-
-          .booking-details {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .booking-header {
-            flex-direction: column;
-            gap: 0.375rem;
-          }
-        }
-      `}</style>
-
-      <div className="bookings-container">
-        <div className="page-header">
-          <h1 className="page-title">📋 Booking Requests</h1>
-          <p className="page-subtitle">Manage and track all student booking requests</p>
+    <DashboardLayout role="owner">
+      {/* Page Header */}
+      <div style={{ marginBottom: 'var(--space-8)' }}>
+        <h1 style={{
+          fontSize: 'var(--text-3xl)',
+          fontWeight: 700,
+          letterSpacing: 'var(--tracking-tighter)',
+          marginBottom: 'var(--space-2)',
+        }}>
+          Booking Requests
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-base)' }}>
+          Manage and track all student booking requests
+        </p>
+      </div>
+
+      {/* Filters */}
+      <div style={{
+        display: 'flex',
+        gap: 'var(--space-2)',
+        marginBottom: 'var(--space-6)',
+        flexWrap: 'wrap',
+      }}>
+        {filters.map(f => (
+          <button
+            key={f.key}
+            className={`btn btn-sm ${filter === f.key ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setFilter(f.key)}
+          >
+            {f.label} ({f.count})
+          </button>
+        ))}
+      </div>
+
+      {error && (
+        <div style={{
+          background: 'var(--danger-light)',
+          color: 'var(--danger-dark)',
+          padding: 'var(--space-3) var(--space-4)',
+          borderRadius: 'var(--radius-md)',
+          marginBottom: 'var(--space-6)',
+          fontSize: 'var(--text-sm)',
+          fontWeight: 500,
+          borderLeft: '4px solid var(--danger)',
+        }}>
+          {error}
         </div>
+      )}
 
-        <div className="filters">
-          <button
-            className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => setFilter('all')}
-          >
-            📊 All ({bookings.length})
-          </button>
-          <button
-            className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
-            onClick={() => setFilter('pending')}
-          >
-            ⏳ Pending ({bookings.filter(b => b.status === 'pending').length})
-          </button>
-          <button
-            className={`filter-btn ${filter === 'approved' ? 'active' : ''}`}
-            onClick={() => setFilter('approved')}
-          >
-            ✅ Approved ({bookings.filter(b => b.status === 'approved' || b.status === 'active').length})
-          </button>
-          <button
-            className={`filter-btn ${filter === 'completed' ? 'active' : ''}`}
-            onClick={() => setFilter('completed')}
-          >
-            🎉 Completed ({bookings.filter(b => b.status === 'completed').length})
-          </button>
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-16)' }}>
+          <div className="spinner spinner-lg" />
         </div>
+      ) : filteredBookings.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }} className="animate-stagger">
+          {filteredBookings.map(booking => {
+            const config = statusConfig[booking.status] || statusConfig.pending
+            const StatusIcon = config.icon
+            const studentName = booking.student?.name || 'Unknown Student'
+            const studentEmail = booking.student?.email || 'N/A'
+            const studentPhone = booking.student?.phone || 'N/A'
+            const hostelName = booking.hostel?.name || 'Unknown Hostel'
+            const roomNumber = booking.room?.number || 'N/A'
+            const roomType = booking.room?.type || booking.roomType || 'N/A'
 
-        {error && <div className="error-message">{error}</div>}
-
-        {loading ? (
-          <div className="loading">Loading bookings...</div>
-        ) : filteredBookings.length > 0 ? (
-          <div className="bookings-list">
-            {filteredBookings.map(booking => {
-              const color = statusColors[booking.status] || statusColors.pending
-              const studentName = booking.student?.name || 'Unknown Student'
-              const studentEmail = booking.student?.email || 'N/A'
-              const studentPhone = booking.student?.phone || 'N/A'
-              const hostelName = booking.hostel?.name || 'Unknown Hostel'
-              const roomNumber = booking.room?.number || 'N/A'
-              const roomType = booking.room?.type || booking.roomType || 'N/A'
-              return (
-                <div key={booking._id} className="booking-card">
-                  <div className="booking-status">
-                    <div
-                      className="status-badge"
-                      style={{
-                        background: color.bg,
-                        color: color.text
-                      }}
-                    >
-                      {color.icon}
+            return (
+              <div key={booking._id} className="card" style={{ overflow: 'visible' }}>
+                <div className="card-body" style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'auto 1fr auto',
+                  gap: 'var(--space-5)',
+                  alignItems: 'flex-start',
+                }}>
+                  {/* Status Icon */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)',
+                  }}>
+                    <div className={`stat-card-icon`} style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 'var(--radius-lg)',
+                    }}>
+                      <StatusIcon size={20} />
                     </div>
-                    <div className="status-text" style={{ color: color.text }}>
-                      {booking.status}
-                    </div>
+                    <span className={`badge ${config.badge}`} style={{ fontSize: '0.625rem' }}>
+                      {config.label}
+                    </span>
                   </div>
 
-                  <div className="booking-info">
-                    <div className="booking-header">
+                  {/* Info */}
+                  <div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: 'var(--space-3)',
+                      paddingBottom: 'var(--space-3)',
+                      borderBottom: '1px solid var(--border-light)',
+                    }}>
                       <div>
-                        <div className="booking-title">
-                          {studentName} • Room {roomNumber}
-                        </div>
-                        <div className="booking-dates">
+                        <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 600, marginBottom: 'var(--space-1)' }}>
+                          {studentName} — Room {roomNumber}
+                        </h3>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
                           Requested: {new Date(booking.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
 
-                    <div className="booking-details">
-                      <div className="detail-item">
-                        <div className="detail-label">Hostel</div>
-                        <div className="detail-value">{hostelName}</div>
-                      </div>
-                      <div className="detail-item">
-                        <div className="detail-label">Room Type</div>
-                        <div className="detail-value">{roomType.toUpperCase()}</div>
-                      </div>
-                      <div className="detail-item">
-                        <div className="detail-label">Email</div>
-                        <div className="detail-value">{studentEmail}</div>
-                      </div>
-                      <div className="detail-item">
-                        <div className="detail-label">Phone</div>
-                        <div className="detail-value">{studentPhone}</div>
-                      </div>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                      gap: 'var(--space-4)',
+                    }}>
+                      {[
+                        { label: 'Hostel', value: hostelName },
+                        { label: 'Room Type', value: roomType.charAt(0).toUpperCase() + roomType.slice(1) },
+                        { label: 'Duration', value: `${booking.durationValue || 1} ${booking.durationType === 'day' ? 'Day' : booking.durationType === 'week' ? 'Week' : 'Month'}${(booking.durationValue || 1) !== 1 ? 's' : ''}` },
+                        { label: 'Total Price', value: booking.totalPrice ? `₹${booking.totalPrice.toLocaleString()}` : `₹${booking.rent?.toLocaleString() || 'N/A'}/mo` },
+                        { label: 'Email', value: studentEmail },
+                        { label: 'Phone', value: studentPhone },
+                      ].map(({ label, value }) => (
+                        <div key={label}>
+                          <div style={{
+                            fontSize: 'var(--text-xs)',
+                            color: 'var(--text-tertiary)',
+                            fontWeight: 500,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            marginBottom: 'var(--space-0-5)',
+                          }}>
+                            {label}
+                          </div>
+                          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: label === 'Total Price' ? 'var(--success)' : undefined }}>
+                            {value}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="booking-actions">
+                  {/* Actions */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'var(--space-2)',
+                    minWidth: 110,
+                  }}>
                     {booking.status === 'pending' && (
                       <>
                         <button
+                          className="btn btn-success btn-sm"
                           onClick={() => handleApprove(booking._id)}
-                          className="action-btn btn-approve"
                         >
-                          ✅ Approve
+                          <CheckCircleIcon size={14} />
+                          Approve
                         </button>
                         <button
+                          className="btn btn-danger btn-sm"
                           onClick={() => handleReject(booking._id)}
-                          className="action-btn btn-reject"
                         >
-                          ❌ Reject
+                          <XCircleIcon size={14} />
+                          Reject
                         </button>
                       </>
                     )}
                     {(booking.status === 'approved' || booking.status === 'active') && (
                       <button
+                        className="btn btn-outline btn-sm"
                         onClick={() => handleCheckout(booking._id)}
-                        className="action-btn btn-checkout"
                       >
-                        🚪 Checkout
+                        <LogOutIcon size={14} />
+                        Checkout
                       </button>
                     )}
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        ) : (
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="card" style={{ border: '1px dashed var(--border)' }}>
           <div className="empty-state">
-            <div className="empty-icon">📋</div>
-            <h3 className="empty-title">
+            <div className="empty-state-icon">
+              <ClipboardIcon size={28} />
+            </div>
+            <h3 className="empty-state-title">
               {filter === 'all' ? 'No Bookings Yet' : `No ${filter} bookings`}
             </h3>
-            <p className="empty-subtitle">
+            <p className="empty-state-text">
               {filter === 'all'
                 ? 'Bookings from students will appear here'
                 : `No bookings with status "${filter}"`}
             </p>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </DashboardLayout>
   )
 }

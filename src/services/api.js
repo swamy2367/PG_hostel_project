@@ -132,6 +132,15 @@ export const authAPI = {
       });
 
       const data = await response.json();
+
+      // Auto-clear stale/corrupt tokens so they stop spamming requests
+      if (!data.success && (data.tokenInvalid || data.tokenExpired)) {
+        removeToken();
+        localStorage.removeItem('userData');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userName');
+      }
+
       return data;
     } catch (error) {
       console.error('Get me error:', error);
@@ -147,6 +156,36 @@ export const authAPI = {
     localStorage.removeItem('userName');
     localStorage.removeItem('adminData'); // Legacy cleanup
     localStorage.removeItem('adminToken'); // Legacy cleanup
+  },
+
+  // Send OTP for registration verification
+  sendOtp: async ({ email, phone, role }) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, phone, role }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      return { success: false, message: 'Network error' };
+    }
+  },
+
+  // Verify OTP
+  verifyOtp: async ({ email, phone, emailOtp, phoneOtp, role }) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, phone, emailOtp, phoneOtp, role }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      return { success: false, message: 'Network error' };
+    }
   },
 };
 
@@ -402,6 +441,17 @@ export const hostelsAPI = {
       return { success: false, message: 'Network error' };
     }
   },
+
+  // Autocomplete suggestions (public)
+  suggest: async (query) => {
+    try {
+      const response = await fetch(`${API_URL}/hostels/suggest?q=${encodeURIComponent(query)}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Suggest error:', error);
+      return { success: true, suggestions: [] };
+    }
+  },
 };
 
 // Location API
@@ -420,6 +470,21 @@ export const locationAPI = {
 
 // Bookings API
 export const bookingsAPI = {
+  // Calculate price for flexible duration
+  calculatePrice: async (hostelId, roomType, durationType, durationValue) => {
+    try {
+      const response = await fetch(`${API_URL}/bookings/calculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hostelId, roomType, durationType, durationValue }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Calculate price error:', error);
+      return { success: false, message: 'Network error' };
+    }
+  },
+
   // Create booking request (student only)
   create: async (bookingData) => {
     try {
