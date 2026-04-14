@@ -159,6 +159,7 @@ return (
 ```css
 .stat-card {
   /* Light theme (default) */
+  margin:2px;
   background: white;
   border: 1px solid #e5e7eb;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
@@ -167,6 +168,7 @@ return (
 
 .dark-theme .stat-card {
   /* Dark theme override */
+  margin:2px;
   background: #1f2937;
   border: 1px solid #374151;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);

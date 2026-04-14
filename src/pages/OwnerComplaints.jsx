@@ -30,12 +30,15 @@ export default function OwnerComplaints() {
   const [complaints, setComplaints] = useState([]);
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ open: 0, in_progress: 0, resolved: 0, closed: 0 });
+  const [stats, setStats] = useState({ open: 0, in_progress: 0, resolved: 0, closed: 0, escalated: 0 });
   const [filters, setFilters] = useState({ status: 'all', hostel: 'all', priority: 'all' });
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [responseText, setResponseText] = useState('');
   const [resolutionText, setResolutionText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showEscalate, setShowEscalate] = useState(false);
+  const [escalateReason, setEscalateReason] = useState('other');
+  const [escalateNote, setEscalateNote] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -141,9 +144,37 @@ export default function OwnerComplaints() {
       in_progress: { bg: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)' },
       resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' },
       closed: { bg: 'rgba(107, 114, 128, 0.15)', text: '#6b7280', border: 'rgba(107, 114, 128, 0.3)' },
-      reopened: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' }
+      reopened: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' },
+      escalated: { bg: 'rgba(168, 85, 247, 0.15)', text: '#a855f7', border: 'rgba(168, 85, 247, 0.3)' }
     };
     return colors[status] || colors.open;
+  };
+
+  const handleEscalate = async () => {
+    if (!selectedComplaint) return;
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/api/complaints/owner/${selectedComplaint._id}/escalate`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason: escalateReason, note: escalateNote })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Complaint escalated to admin');
+        setShowEscalate(false);
+        setEscalateNote('');
+        setSelectedComplaint(null);
+        fetchData();
+      } else {
+        toast.error(data.message || 'Failed to escalate');
+      }
+    } catch (error) {
+      toast.error('Failed to escalate');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getPriorityColor = (priority) => {
@@ -662,6 +693,7 @@ export default function OwnerComplaints() {
             <option value="resolved">Resolved</option>
             <option value="closed">Closed</option>
             <option value="reopened">Reopened</option>
+            <option value="escalated">Escalated</option>
           </select>
 
           <select 
@@ -733,9 +765,9 @@ export default function OwnerComplaints() {
                       </div>
                       <div className="complaint-card-meta">
                         <span>{CATEGORIES.find(c => c.value === complaint.category)?.label || complaint.category}</span>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>{complaint.hostel?.name}</span>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>{formatDate(complaint.createdAt)}</span>
                       </div>
                       <div className="complaint-card-student">
@@ -829,7 +861,7 @@ export default function OwnerComplaints() {
                     <div className="detail-section">
                       <div className="detail-label">Student Feedback</div>
                       <div className="feedback-box">
-                        <div className="feedback-rating">{'★'.repeat(selectedComplaint.studentRating)}</div>
+                        <div className="feedback-rating">{'â˜…'.repeat(selectedComplaint.studentRating)}</div>
                         {selectedComplaint.studentFeedback && (
                           <div>{selectedComplaint.studentFeedback}</div>
                         )}
@@ -883,6 +915,8 @@ export default function OwnerComplaints() {
                       )}
                     </div>
                   )}
+
+                  {/* Actions Area */}
                 </>
               ) : (
                 <div className="no-selection">
@@ -894,6 +928,8 @@ export default function OwnerComplaints() {
           </div>
         )}
       </div>
+
+      {/* Modals End */}
     </DashboardLayout>
   );
 }

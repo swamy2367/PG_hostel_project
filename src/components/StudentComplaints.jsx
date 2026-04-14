@@ -37,15 +37,23 @@ export default function StudentComplaints({ activeBooking }) {
   });
   const [feedbackComplaint, setFeedbackComplaint] = useState(null);
   const [feedbackData, setFeedbackData] = useState({ rating: 0, feedback: '' });
+  
+  const currentUserStr = localStorage.getItem('userData');
+  const currentUserId = currentUserStr ? JSON.parse(currentUserStr)._id || JSON.parse(currentUserStr).id : null;
 
   useEffect(() => {
     fetchComplaints();
-  }, []);
+  }, [activeBooking]);
 
   const fetchComplaints = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/complaints/my', {
+      const hostelId = activeBooking?.hostel?._id || activeBooking?.hostel;
+      const url = hostelId 
+        ? `http://localhost:5000/api/complaints/hostel/${hostelId}`
+        : 'http://localhost:5000/api/complaints/my';
+        
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -542,7 +550,7 @@ export default function StudentComplaints({ activeBooking }) {
       <div className="complaints-section">
         <div className="complaints-header">
           <div className="complaints-title">
-            My Complaints
+            {activeBooking ? 'Hostel Complaints' : 'My Complaints'}
             <span className="complaints-count">{complaints.length}</span>
           </div>
           <button 
@@ -650,6 +658,12 @@ export default function StudentComplaints({ activeBooking }) {
                     <div>
                       <div className="complaint-title">{complaint.subject}</div>
                       <div className="complaint-meta">
+                        <span style={{ fontWeight: 600, color: 'var(--primary)' }}>
+                          {complaint.student?._id === currentUserId || complaint.student === currentUserId
+                            ? 'By You'
+                            : `By ${complaint.student?.name || 'Fellow Student'}`}
+                        </span>
+                        <span>•</span>
                         <span>{CATEGORIES.find(c => c.value === complaint.category)?.label || complaint.category}</span>
                         <span>•</span>
                         <span>{complaint.hostel?.name}</span>
@@ -697,7 +711,7 @@ export default function StudentComplaints({ activeBooking }) {
                     </div>
                   )}
 
-                  {complaint.status === 'resolved' && !complaint.studentRating && (
+                  {complaint.status === 'resolved' && (complaint.student?._id === currentUserId || complaint.student === currentUserId) && !complaint.studentRating && (
                     <div className="complaint-actions">
                       <button 
                         className="action-btn feedback"

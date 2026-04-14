@@ -23,6 +23,7 @@ import AddHostel from './pages/AddHostel'
 import ManageRooms from './pages/ManageRooms'
 import OwnerBookings from './pages/OwnerBookings'
 import OwnerComplaints from './pages/OwnerComplaints'
+import OwnerRequests from './pages/OwnerRequests'
 import OwnerSubscription from './pages/OwnerSubscription'
 import ProtectedRoute from './components/ProtectedRoute'
 import ChatBot from './components/ChatBot'
@@ -166,6 +167,7 @@ function AppContent() {
         <Route path="/owner/rooms/add" element={<ManageRooms />} />
         <Route path="/owner/bookings" element={<OwnerBookings />} />
         <Route path="/owner/complaints" element={<OwnerComplaints />} />
+        <Route path="/owner/requests" element={<OwnerRequests />} />
         <Route path="/owner/subscription" element={<OwnerSubscription />} />
       </Route>
 

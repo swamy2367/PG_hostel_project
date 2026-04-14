@@ -1,7 +1,7 @@
 const API_URL = 'http://localhost:5000/api';
 
 // Get token from localStorage
-const getToken = () => localStorage.getItem('token');
+const getToken = () => localStorage.getItem('token') || localStorage.getItem('adminToken');
 
 // Set token to localStorage
 const setToken = (token) => localStorage.setItem('token', token);
@@ -1026,6 +1026,48 @@ export const subscriptionAPI = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+      });
+      return await res.json();
+    } catch (error) {
+      return { success: false, message: 'Network error' };
+    }
+  },
+};
+
+// Notification API
+export const notificationAPI = {
+  getAll: async (unreadOnly = false) => {
+    try {
+      const token = getToken();
+      const url = `${API_URL}/notifications${unreadOnly ? '?unreadOnly=true' : ''}`;
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      return await res.json();
+    } catch (error) {
+      return { success: false, message: 'Network error' };
+    }
+  },
+
+  markRead: async (id) => {
+    try {
+      const token = getToken();
+      const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      return await res.json();
+    } catch (error) {
+      return { success: false, message: 'Network error' };
+    }
+  },
+
+  markAllRead: async () => {
+    try {
+      const token = getToken();
+      const res = await fetch(`${API_URL}/notifications/read-all`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
       return await res.json();
     } catch (error) {

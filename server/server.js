@@ -1,7 +1,9 @@
 import express from 'express';
+import { createServer } from 'http';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { initSocket } from './socket.js';
 import authRoutes from './routes/auth.js';
 import roomRoutes from './routes/rooms.js';
 import studentRoutes from './routes/students.js';
@@ -15,10 +17,16 @@ import complaintRoutes from './routes/complaints.js';
 import paymentRoutes from './routes/payments.js';
 import adminRoutes from './routes/admin.js';
 import subscriptionRoutes from './routes/subscription.js';
+import notificationRoutes from './routes/notifications.js';
+import ownerRequestRoutes from './routes/ownerRequests.js';
 
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
+
+// Initialize Socket.io
+initSocket(httpServer);
 
 // Middleware
 app.use(cors({
@@ -48,6 +56,8 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/owner-requests', ownerRequestRoutes);
 
 // Health check
 app.get('/', (req, res) => {
@@ -56,6 +66,7 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🔌 Socket.io ready`);
 });

@@ -5,6 +5,7 @@ import {
   HomeIcon, SunIcon, MoonIcon, LogOutIcon, ChevronLeftIcon, ChevronRightIcon,
   MenuIcon, XIcon, UserIcon, CreditCardIcon
 } from './Icons';
+import NotificationBell from './NotificationBell';
 
 export default function DashboardLayout({ children, role = 'owner' }) {
   const location = useLocation();
@@ -59,6 +60,7 @@ export default function DashboardLayout({ children, role = 'owner' }) {
     { to: '/owner/rooms', label: 'Rooms', icon: BedIcon },
     { to: '/owner/bookings', label: 'Bookings', icon: ClipboardIcon },
     { to: '/owner/complaints', label: 'Complaints', icon: TicketIcon },
+    { to: '/owner/requests', label: 'Admin Support', icon: ClipboardIcon },
     { to: '/owner/subscription', label: 'Listing Payment', icon: CreditCardIcon },
   ];
 
@@ -413,6 +415,8 @@ export default function DashboardLayout({ children, role = 'owner' }) {
             >
               {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
             </button>
+
+            <NotificationBell />
 
             <div className="topbar-user">
               <div className="avatar avatar-sm">

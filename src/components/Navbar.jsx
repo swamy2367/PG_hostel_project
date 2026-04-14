@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import NotificationBell from './NotificationBell';
 import {
   HomeIcon, BuildingIcon, BedIcon, ClipboardIcon, TicketIcon,
   LayoutDashboardIcon, UserIcon, LogOutIcon, SunIcon, MoonIcon,
@@ -497,6 +498,8 @@ export default function Navbar() {
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
               {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
             </button>
+
+            {isLoggedIn && <NotificationBell />}
 
             {isLoggedIn ? (
               <div className="profile-menu" ref={profileRef}>

@@ -11,6 +11,7 @@ import {
   DollarSignIcon, HourglassIcon, UsersIcon, AlertTriangleIcon,
   KeyIcon, TrendingUpIcon, WalletIcon, CheckIcon, HashIcon
 } from '../components/Icons';
+import NotificationBell from '../components/NotificationBell';
 
 const TABS = [
   { id: 'overview', label: 'Overview', Icon: BarChart2Icon },
@@ -21,6 +22,7 @@ const TABS = [
   { id: 'owners', label: 'Owners', Icon: BuildingIcon },
   { id: 'hostels', label: 'Hostels', Icon: HomeIcon },
   { id: 'transactions', label: 'Transactions', Icon: ListIcon },
+  { id: 'owner_requests', label: 'Owner Requests', Icon: AlertTriangleIcon },
 ];
 
 const STATUS_COLORS = {
@@ -40,6 +42,8 @@ export default function AdminDashboard() {
   const [owners, setOwners] = useState([]);
   const [hostels, setHostels] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [ownerRequests, setOwnerRequests] = useState([]);
+  const [requestActionText, setRequestActionText] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [paymentFilter, setPaymentFilter] = useState('');
   const [bookingFilter, setBookingFilter] = useState('');
@@ -88,6 +92,13 @@ export default function AdminDashboard() {
       } else if (tab === 'transactions') {
         const result = await adminAPI.getTransactions();
         if (result.success) setTransactions(result.transactions || []);
+      } else if (tab === 'owner_requests') {
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('http://localhost:5000/api/owner-requests/admin', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) setOwnerRequests(data.requests || []);
       }
     } catch (err) {
       console.error('Load tab error:', err);
@@ -161,6 +172,28 @@ export default function AdminDashboard() {
     );
   }
 
+  async function handleOwnerRequestAction(requestId, action) {
+    const response = requestActionText[requestId] || '';
+    try {
+      const token = localStorage.getItem('adminToken');
+      const res = await fetch(`http://localhost:5000/api/owner-requests/admin/${requestId}/action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action, response })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Request ${action}`);
+        setRequestActionText(prev => { const n = {...prev}; delete n[requestId]; return n; });
+        loadTab('owner_requests');
+      } else {
+        toast.error(data.message || 'Action failed');
+      }
+    } catch (error) {
+      toast.error('Failed to process action');
+    }
+  }
+
   // ── RENDER ──────────────────────────────────────────────────────────
   return (
     <>
@@ -221,6 +254,7 @@ export default function AdminDashboard() {
                 />
               </div>
             )}
+            <NotificationBell />
           </div>
 
           {isLoading ? (
@@ -494,6 +528,115 @@ export default function AdminDashboard() {
                       {transactions.length === 0 && <tr><td colSpan="7" className="adm-empty">No transactions found</td></tr>}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* ── OWNER REQUESTS ── */}
+              {activeTab === 'owner_requests' && (
+                <div>
+                  <div style={{ marginBottom: '1rem', color: 'var(--adm-text-sec)', fontSize: '0.85rem' }}>
+                    {ownerRequests.length} owner request{ownerRequests.length !== 1 ? 's' : ''} requiring admin attention
+                  </div>
+                  {ownerRequests.length === 0 ? (
+                    <div className="adm-empty" style={{ padding: '3rem', textAlign: 'center' }}>
+                      <AlertTriangleIcon size={32} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
+                      <div>No owner requests</div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {ownerRequests.map(r => (
+                        <div key={r._id} style={{
+                          background: 'var(--adm-card)', border: '1px solid var(--adm-border)',
+                          borderRadius: '12px', padding: '1.25rem', borderLeft: '4px solid #a855f7'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--adm-text)' }}>{r.subject}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--adm-text-sec)', marginTop: 2 }}>
+                                By {r.owner?.name} — {r.type.replace('_', ' ')}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              <StatusBadge status={r.status} />
+                              <span style={{
+                                padding: '4px 10px', borderRadius: '20px', fontSize: '0.68rem', fontWeight: 700,
+                                background: 'rgba(168,85,247,0.12)', color: '#a855f7', textTransform: 'uppercase'
+                              }}>{r.priority}</span>
+                            </div>
+                          </div>
+
+                          <div style={{ fontSize: '0.88rem', color: 'var(--adm-text)', lineHeight: 1.6, marginBottom: '0.75rem' }}>
+                            {r.description}
+                          </div>
+
+                          {r.ownerResponse && (
+                            <div style={{ background: 'rgba(59,130,246,0.06)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #3b82f6', marginBottom: '0.75rem' }}>
+                              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Owner Reply</div>
+                              <div style={{ fontSize: '0.85rem' }}>{r.ownerResponse}</div>
+                              {r.ownerAttachment && (
+                                <div style={{ marginTop: '0.5rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Attachment Provided ✅</span>
+                                    <a href={r.ownerAttachment} download={`Owner_Attachment_${r._id}`} style={{ fontSize: '0.75rem', fontWeight: 600, padding: '2px 8px', background: '#3b82f6', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>Download File</a>
+                                  </div>
+                                  {r.ownerAttachment.startsWith('data:image') && (
+                                    <img 
+                                      src={r.ownerAttachment} 
+                                      alt="attachment" 
+                                      style={{ display: 'block', maxWidth: '200px', marginTop: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', cursor: 'pointer' }}
+                                      onClick={() => window.open(r.ownerAttachment, '_blank')}
+                                      title="Click to view full size"
+                                    />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {r.adminResponse && (
+                            <div style={{ background: 'rgba(34,197,94,0.06)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #22c55e', marginBottom: '0.75rem' }}>
+                              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#22c55e', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                                Admin Response History
+                              </div>
+                              <div style={{ fontSize: '0.85rem' }}>{r.adminResponse}</div>
+                              {r.resolvedAt && (
+                                <div style={{ fontSize: '0.75rem', color: 'var(--adm-text-sec)', marginTop: 4 }}>
+                                  Resolved on {new Date(r.resolvedAt).toLocaleString()}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {['open', 'in_progress'].includes(r.status) && (
+                            <div style={{ borderTop: '1px solid var(--adm-border)', paddingTop: '0.75rem' }}>
+                              <textarea
+                                placeholder="Admin response / notes..."
+                                value={requestActionText[r._id] || ''}
+                                onChange={e => setRequestActionText(prev => ({ ...prev, [r._id]: e.target.value }))}
+                                style={{
+                                  width: '100%', padding: '0.6rem', border: '1px solid var(--adm-border)',
+                                  borderRadius: '8px', fontSize: '0.85rem', fontFamily: 'inherit',
+                                  minHeight: '60px', resize: 'vertical', background: 'var(--adm-bg)',
+                                  color: 'var(--adm-text)', marginBottom: '0.5rem'
+                                }}
+                              />
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button className="adm-action-btn release" onClick={() => handleOwnerRequestAction(r._id, 'resolved')}>
+                                  ✅ Resolve
+                                </button>
+                                <button className="adm-action-btn" style={{ background: '#f59e0b', color: 'white' }} onClick={() => handleOwnerRequestAction(r._id, 'more_info')}>
+                                  📋 Request Info
+                                </button>
+                                <button className="adm-action-btn danger" onClick={() => handleOwnerRequestAction(r._id, 'rejected')}>
+                                  ❌ Reject
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
