@@ -24,13 +24,13 @@ export default function OwnerDashboard() {
         const token = localStorage.getItem('token')
 
         const [hostelResponse, complaintResponse, bookingsResponse] = await Promise.all([
-          fetch('http://localhost:5000/api/hostels/owner/my', {
+          fetch('/api/hostels/owner/my', {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
-          fetch('http://localhost:5000/api/complaints/owner/stats', {
+          fetch('/api/complaints/owner/stats', {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
-          fetch('http://localhost:5000/api/bookings/owner/all', {
+          fetch('/api/bookings/owner/all', {
             headers: { 'Authorization': `Bearer ${token}` }
           })
         ])

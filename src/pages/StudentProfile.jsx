@@ -47,7 +47,7 @@ export default function StudentProfile() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/students/profile', {
+      const response = await fetch('/api/students/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

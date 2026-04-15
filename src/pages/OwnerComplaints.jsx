@@ -51,13 +51,13 @@ export default function OwnerComplaints() {
       
       // Fetch complaints and hostels in parallel
       const [complaintsRes, hostelsRes, statsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/complaints/owner/all', {
+        fetch('/api/complaints/owner/all', {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch('http://localhost:5000/api/hostels/owner/my', {
+        fetch('/api/hostels/owner/my', {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch('http://localhost:5000/api/complaints/owner/stats', {
+        fetch('/api/complaints/owner/stats', {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -88,7 +88,7 @@ export default function OwnerComplaints() {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/complaints/owner/${selectedComplaint._id}/respond`, {
+      const res = await fetch(`/api/complaints/owner/${selectedComplaint._id}/respond`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ export default function OwnerComplaints() {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/complaints/owner/${selectedComplaint._id}/resolve`, {
+      const res = await fetch(`/api/complaints/owner/${selectedComplaint._id}/resolve`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -155,7 +155,7 @@ export default function OwnerComplaints() {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/complaints/owner/${selectedComplaint._id}/escalate`, {
+      const res = await fetch(`/api/complaints/owner/${selectedComplaint._id}/escalate`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ reason: escalateReason, note: escalateNote })

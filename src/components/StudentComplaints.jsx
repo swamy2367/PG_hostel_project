@@ -50,8 +50,8 @@ export default function StudentComplaints({ activeBooking }) {
       const token = localStorage.getItem('token');
       const hostelId = activeBooking?.hostel?._id || activeBooking?.hostel;
       const url = hostelId 
-        ? `http://localhost:5000/api/complaints/hostel/${hostelId}`
-        : 'http://localhost:5000/api/complaints/my';
+        ? `/api/complaints/hostel/${hostelId}`
+        : '/api/complaints/my';
         
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
@@ -77,7 +77,7 @@ export default function StudentComplaints({ activeBooking }) {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/complaints', {
+      const res = await fetch('/api/complaints', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +109,7 @@ export default function StudentComplaints({ activeBooking }) {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/complaints/${feedbackComplaint._id}/feedback`, {
+      const res = await fetch(`/api/complaints/${feedbackComplaint._id}/feedback`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ export default function StudentComplaints({ activeBooking }) {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/complaints/${complaintId}/reopen`, {
+      const res = await fetch(`/api/complaints/${complaintId}/reopen`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

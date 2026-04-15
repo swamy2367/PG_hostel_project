@@ -45,7 +45,7 @@ export default function OwnerNavbar() {
   const fetchOwnerName = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5000/api/auth/me', {
+      const response = await fetch('/api/auth/me', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await response.json()

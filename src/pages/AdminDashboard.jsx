@@ -94,7 +94,7 @@ export default function AdminDashboard() {
         if (result.success) setTransactions(result.transactions || []);
       } else if (tab === 'owner_requests') {
         const token = localStorage.getItem('adminToken');
-        const res = await fetch('http://localhost:5000/api/owner-requests/admin', {
+        const res = await fetch('/api/owner-requests/admin', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
     const response = requestActionText[requestId] || '';
     try {
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(`http://localhost:5000/api/owner-requests/admin/${requestId}/action`, {
+      const res = await fetch(`/api/owner-requests/admin/${requestId}/action`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action, response })

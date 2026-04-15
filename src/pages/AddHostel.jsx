@@ -137,7 +137,7 @@ export default function AddHostel() {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/hostels/${hostelId}`, {
+      const response = await fetch(`/api/hostels/${hostelId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await response.json()
@@ -387,8 +387,8 @@ export default function AddHostel() {
       console.log('Sending payload:', hostelPayload)
 
       const url = isEditMode 
-        ? `http://localhost:5000/api/hostels/${hostelId}`
-        : 'http://localhost:5000/api/hostels'
+        ? `/api/hostels/${hostelId}`
+        : '/api/hostels'
       
       const method = isEditMode ? 'PUT' : 'POST'
 

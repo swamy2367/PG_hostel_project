@@ -39,7 +39,7 @@ export default function OwnerRequests() {
     setReplying(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/owner-requests/my/${reqId}/reply`, {
+      const res = await fetch(`/api/owner-requests/my/${reqId}/reply`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ response, attachment })
@@ -71,7 +71,7 @@ export default function OwnerRequests() {
   const fetchRequests = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/owner-requests/my', {
+      const res = await fetch('/api/owner-requests/my', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -90,7 +90,7 @@ export default function OwnerRequests() {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/owner-requests', {
+      const res = await fetch('/api/owner-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData)

@@ -27,7 +27,7 @@ export default function ManageRooms() {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5000/api/hostels/owner/my', {
+      const response = await fetch('/api/hostels/owner/my', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await response.json()
@@ -61,7 +61,7 @@ export default function ManageRooms() {
   const fetchRoomsForHostel = async (hostelId) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/rooms/hostel/${hostelId}`, {
+      const response = await fetch(`/api/rooms/hostel/${hostelId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await response.json()
@@ -124,7 +124,7 @@ export default function ManageRooms() {
     if (!editingRoom) return
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/hostels/${selectedHostel._id}/rooms/${editingRoom}`, {
+      const response = await fetch(`/api/hostels/${selectedHostel._id}/rooms/${editingRoom}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(formData)
@@ -139,7 +139,7 @@ export default function ManageRooms() {
     if (!selectedHostel) return
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/hostels/${selectedHostel._id}/rooms/${roomId}`, {
+      const response = await fetch(`/api/hostels/${selectedHostel._id}/rooms/${roomId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -347,14 +347,6 @@ export default function ManageRooms() {
                   )}
                 </div>
 
-                <div className="rm-card-footer">
-                  <button className="btn btn-outline btn-sm" onClick={() => handleEditRoom(room)}>
-                    <EditIcon size={14} /> Edit
-                  </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDeleteRoom(room._id)}>
-                    <TrashIcon size={14} /> Delete
-                  </button>
-                </div>
               </div>
             )
           })}

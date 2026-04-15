@@ -245,7 +245,7 @@ export default function ChatBot() {
   const queryDatabase = async (intent, query = {}) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/chatbot/query', {
+      const res = await fetch('/api/chatbot/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
         body: JSON.stringify({ intent, query })

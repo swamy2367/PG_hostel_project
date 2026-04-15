@@ -22,7 +22,7 @@ export default function OwnerHostels() {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5000/api/hostels/owner/my', {
+      const response = await fetch('/api/hostels/owner/my', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await response.json()
@@ -54,7 +54,7 @@ export default function OwnerHostels() {
         setConfirmAction(null);
         try {
           const token = localStorage.getItem('token')
-          const response = await fetch(`http://localhost:5000/api/hostels/${hostelId}`, {
+          const response = await fetch(`/api/hostels/${hostelId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
           })
@@ -231,19 +231,11 @@ export default function OwnerHostels() {
               <div className="card-footer" style={{ display: 'flex', gap: 'var(--space-3)' }}>
                 <button
                   className="btn btn-outline btn-sm"
-                  style={{ flex: 1 }}
+                  style={{ width: '100%' }}
                   onClick={() => navigate(`/owner/hostels/${hostel._id}/edit`)}
                 >
                   <EditIcon size={14} />
-                  Edit
-                </button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  style={{ flex: 1 }}
-                  onClick={() => handleDelete(hostel._id)}
-                >
-                  <TrashIcon size={14} />
-                  Delete
+                  Edit Hostel Info
                 </button>
               </div>
             </div>

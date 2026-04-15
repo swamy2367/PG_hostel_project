@@ -24,7 +24,7 @@ export default function OwnerBookings() {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5000/api/bookings/owner/all', {
+      const response = await fetch('/api/bookings/owner/all', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await response.json()
@@ -43,7 +43,7 @@ export default function OwnerBookings() {
   const handleApprove = async (bookingId) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/approve`, {
+      const response = await fetch(`/api/bookings/${bookingId}/approve`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export default function OwnerBookings() {
   const handleReject = async (bookingId) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/reject`, {
+      const response = await fetch(`/api/bookings/${bookingId}/reject`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ export default function OwnerBookings() {
         setConfirmAction(null);
         try {
           const token = localStorage.getItem('token')
-          const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/checkout`, {
+          const response = await fetch(`/api/bookings/${bookingId}/checkout`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` }
           })
@@ -121,7 +121,7 @@ export default function OwnerBookings() {
     setVerifyMessage({ type: '', text: '' })
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5000/api/bookings/confirm-code', {
+      const response = await fetch('/api/bookings/confirm-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ code: verifyCode.trim() })
