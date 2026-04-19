@@ -187,6 +187,51 @@ export const authAPI = {
       return { success: false, message: 'Network error' };
     }
   },
+
+  // Forgot Password — send reset OTP
+  forgotPassword: async ({ email, role }) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      return { success: false, message: 'Network error' };
+    }
+  },
+
+  // Verify reset OTP
+  verifyResetOtp: async ({ email, otp, role }) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/verify-reset-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp, role }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Verify reset OTP error:', error);
+      return { success: false, message: 'Network error' };
+    }
+  },
+
+  // Reset password
+  resetPassword: async ({ email, newPassword, role }) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword, role }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return { success: false, message: 'Network error' };
+    }
+  },
 };
 
 // Students API

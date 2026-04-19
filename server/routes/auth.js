@@ -527,4 +527,186 @@ router.get('/me', authenticate, async (req, res) => {
   }
 });
 
+// ─── FORGOT PASSWORD ROUTES ──────────────────────────────────────────
+
+// @route   POST /api/auth/forgot-password
+// @desc    Send OTP to registered email for password reset
+// @access  Public
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email, role } = req.body;
+
+    if (!email || !role) {
+      return res.status(400).json({ success: false, message: 'Email and role are required' });
+    }
+
+    if (!['student', 'owner'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role' });
+    }
+
+    // Find the user in the correct collection
+    const Model = role === 'student' ? Student : Owner;
+    const user = await Model.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No account found with this email address',
+      });
+    }
+
+    // Cooldown: prevent spamming (30 second window)
+    const recentOtp = await Otp.findOne({
+      email: email.toLowerCase(),
+      role,
+      purpose: 'reset',
+      createdAt: { $gt: new Date(Date.now() - 30 * 1000) },
+    });
+
+    if (recentOtp) {
+      const waitSeconds = Math.ceil(
+        (30 * 1000 - (Date.now() - recentOtp.createdAt.getTime())) / 1000
+      );
+      return res.status(429).json({
+        success: false,
+        message: `Please wait ${waitSeconds} seconds before requesting a new OTP`,
+      });
+    }
+
+    const otp = generateOtp();
+
+    // Clear any previous reset OTPs for this user
+    await Otp.deleteMany({ email: email.toLowerCase(), role, purpose: 'reset' });
+
+    // Store with purpose: 'reset' to distinguish from registration OTPs
+    await Otp.create({
+      email: email.toLowerCase(),
+      phone: 'N/A',
+      emailOtp: otp,
+      phoneOtp: 'N/A',
+      role,
+      purpose: 'reset',
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    console.log(`🔑 Reset OTP for ${email}: ${otp}`);
+
+    const emailSent = await sendOtpEmail(email, otp);
+
+    res.json({
+      success: true,
+      message: 'Password reset OTP sent to your email',
+      emailSent,
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ success: false, message: 'Failed to process request' });
+  }
+});
+
+// @route   POST /api/auth/verify-reset-otp
+// @desc    Verify OTP for password reset
+// @access  Public
+router.post('/verify-reset-otp', async (req, res) => {
+  try {
+    const { email, otp, role } = req.body;
+
+    if (!email || !otp || !role) {
+      return res.status(400).json({ success: false, message: 'Email, OTP, and role are required' });
+    }
+
+    const otpRecord = await Otp.findOne({
+      email: email.toLowerCase(),
+      role,
+      purpose: 'reset',
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({ success: false, message: 'No OTP found. Please request a new one.' });
+    }
+
+    // Check expiry
+    if (otpRecord.expiresAt < new Date()) {
+      await otpRecord.deleteOne();
+      return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
+    }
+
+    // Check attempts (max 5)
+    if (otpRecord.attempts >= 5) {
+      await otpRecord.deleteOne();
+      return res.status(429).json({ success: false, message: 'Too many failed attempts. Please request a new OTP.' });
+    }
+
+    // Verify
+    if (otpRecord.emailOtp !== otp.trim()) {
+      otpRecord.attempts += 1;
+      await otpRecord.save();
+      const remaining = 5 - otpRecord.attempts;
+      return res.status(400).json({
+        success: false,
+        message: `Invalid OTP. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`,
+      });
+    }
+
+    // Mark verified
+    otpRecord.emailVerified = true;
+    await otpRecord.save();
+
+    res.json({ success: true, message: 'OTP verified successfully' });
+  } catch (error) {
+    console.error('Verify reset OTP error:', error);
+    res.status(500).json({ success: false, message: 'Verification failed' });
+  }
+});
+
+// @route   POST /api/auth/reset-password
+// @desc    Reset password after OTP verification
+// @access  Public
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, newPassword, role } = req.body;
+
+    if (!email || !newPassword || !role) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+
+    // Ensure OTP was verified first
+    const otpRecord = await Otp.findOne({
+      email: email.toLowerCase(),
+      role,
+      purpose: 'reset',
+      emailVerified: true,
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({ success: false, message: 'Please verify OTP before resetting password' });
+    }
+
+    // Update password
+    const Model = role === 'student' ? Student : Owner;
+    const user = await Model.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.password = newPassword; // pre-save hook will hash it
+    await user.save();
+
+    // Clean up OTP record
+    await otpRecord.deleteOne();
+
+    console.log(`🔐 Password reset successful for ${email} (${role})`);
+
+    res.json({ success: true, message: 'Password reset successfully! You can now login with your new password.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ success: false, message: 'Failed to reset password' });
+  }
+});
+
 export default router;

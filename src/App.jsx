@@ -7,6 +7,7 @@ import SearchResults from './pages/SearchResults'
 import HostelDetails from './pages/HostelDetails'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentProfile from './pages/StudentProfile'
 import StudentBookings from './pages/StudentBookings'
@@ -139,6 +140,7 @@ function AppContent() {
       {/* Auth Routes - No navbar, they have their own layout */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Protected Student Routes */}
       <Route element={<ProtectedRoute role="student" />}>
